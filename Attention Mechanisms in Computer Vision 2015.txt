@@ -1,0 +1,3981 @@
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+1
+Attention Mechanisms in Computer Vision:
+A Survey
+Meng-Hao Guo, Tian-Xing Xu, Jiang-Jiang Liu, Zheng-Ning Liu, Peng-Tao Jiang, Tai-Jiang Mu, Song-Hai
+Zhang, Ralph R. Martin, Ming-Ming Cheng, Senior Member, IEEE, Shi-Min Hu, Senior Member, IEEE,
+Abstract—Humans can naturally and effectively ﬁnd salient regions in complex scenes. Motivated by this observation, attention
+mechanisms were introduced into computer vision with the aim of imitating this aspect of the human visual system. Such an attention
+mechanism can be regarded as a dynamic weight adjustment process based on features of the input image. Attention mechanisms have
+achieved great success in many visual tasks, including image classiﬁcation, object detection, semantic segmentation, video
+understanding, image generation, 3D vision, multi-modal tasks and self-supervised learning. In this survey, we provide a comprehensive
+review of various attention mechanisms in computer vision and categorize them according to approach, such as channel attention, spatial
+attention, temporal attention and branch attention; a related repository https://github.com/MenghaoGuo/Awesome-Vision-Attentions is
+dedicated to collecting related work. We also suggest future directions for attention mechanism research.
+Index Terms—Attention, Transformer, Survey, Computer Vision, Deep Learning, Salience.
+!
+1
+INTRODUCTION
+M
+ETHODS for diverting attention to the most impor-
+tant regions of an image and disregarding irrelevant
+parts are called attention mechanisms; the human visual
+system uses one [1], [2], [3], [4] to assist in analyzing and
+understanding complex scenes efﬁciently and effectively.
+This in turn has inspired researchers to introduce attention
+mechanisms into computer vision systems to improve their
+performance. In a vision system, an attention mechanism can
+be treated as a dynamic selection process that is realized by
+adaptively weighting features according to the importance
+of the input. Attention mechanisms have provided beneﬁts
+in very many visual tasks, e.g. image classiﬁcation [5], [6],
+object detection [7], [8], semantic segmentation [9], [10], face
+recognition [11], [12], person re-identiﬁcation [13], [14], action
+recognition [15], [16], few-show learning [17], [18], medical
+image processing [19], [20], image generation [21], [22], pose
+estimation [23], super resolution [24], [25], 3D vision [26],
+[27], and multi-modal task [28], [29].
+In the past decade, the attention mechanism has played
+an increasingly important role in computer vision; Fig. 3,
+brieﬂy summarizes the history of attention-based models
+in computer vision in the deep learning era. Progress can
+be coarsely divided into four phases. The ﬁrst phase begins
+from RAM [31], pioneering work that combined deep neural
+networks with attention mechanisms. It recurrently predicts
+the important region and updates the whole network in an
+end-to-end manner through a policy gradient. Later, various
+works [21], [35] adopted a similar strategy for attention in
+•
+M.H.Guo, T.X.Xu, Z.N.Liu, T.J.Mu, S.H.Zhang and S.M.Hu are with
+the BNRist, Department of Computer Science and Technology, Tsinghua
+University, Beijing 100084, China.
+•
+J.J.Liu, P.T.Jiang and M.M.Cheng are with TKLNDST, College of Computer
+Science, Nankai University, Tianjin 300350, China.
+•
+R.R.Martin was with the School of Computer Science and Informatics,
+Cardiff University, UK.
+•
+S.M.Hu is the corresponding author.
+E-mail: shimin@tsinghua.edu.cn.
+Channel Attention
+e.g.,SENet
+What to attend
+Spatial Attention
+e.g.,Self-attention
+Where to attend
+Channel & Spatial
+Attention
+e.g.,CBAM
+Temporal Attention
+e.g., GLTR
+When to attend
+∅
+Spatial&Temporal
+Attention
+e.g., STA-LSTM
+∅
+Branch Attention
+e.g., SKNet
+Which to attend
+Fig. 1. Attention mechanisms can be categorised according to data
+domain. These include four fundamental categories of channel attention,
+spatial attention, temporal attention and branch attention, and two hybrid
+categories, combining channel & spatial attention and spatial & temporal
+attention. ∅means such combinations do not (yet) exist.
+vision. In this phase, recurrent neural networks(RNNs) were
+necessary tools for an attention mechanism. At the start of
+the second phase, Jaderberg et al. [32] proposed the STN
+which introduces a sub-network to predict an afﬁne trans-
+formation used to to select important regions in the input.
+Explicitly predicting discriminatory input features is the
+major characteristic of the second phase; DCNs [7], [36] are
+representative works. The third phase began with SENet [5]
+arXiv:2111.07624v1  [cs.CV]  15 Nov 2021
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+2
+C
+H,W
+Channel Attention
+T
+C
+H,W
+Temporal Attention
+T
+C
+H,W
+Spatial Attention
+T
+C
+H,W
+Channel&Spatial Attention
+T
+C
+H,W
+Spatial&Temporal Attention
+T
+Branch Attention
+Branch n
+…
+Branch 2
+Branch 1
+: Where attention is used.
+Fig. 2. Channel, spatial and temporal attention can be regarded as
+operating on different domains. C represents the channel domain, H
+and W represent spatial domains, and T means the temporal domain.
+Branch attention is complementary to these. Figure following [30].
+that presented a novel channel-attention network which
+implicitly and adaptively predicts the potential key features.
+CBAM [6] and ECANet [37] are representative works of this
+phase. The last phase is the self-attention era. Self-attention
+was ﬁrstly proposed in [33] and rapidly provided great
+advances in the ﬁeld of natural language processing [33],
+[38], [39]. Wang et al. [15] took the lead in introducing self-
+attention to computer vision and presented a novel non-local
+network with great success in video understanding and
+object detection. It was followed by a series of works such as
+EMANet [40], CCNet [41], HamNet [42] and the Stand-Alone
+Network [43], which improved speed, quality of results,
+and generalization capability. Recently, various pure deep
+self-attention networks (visual transformers) [27], [34], [44],
+[45], [46], [47], [48], [49] have appeared, showing the huge
+potential of attention-based models. It is clear that attention-
+based models have the potential to replace convolutional
+neural networks and become a more powerful and general
+architecture in computer vision.
+The goal of this paper is to summarize and classify
+current attention methods in computer vision. Our approach
+TABLE 1
+Key notation in this paper. Other minor notation is explained where used.
+Symbol
+Description
+X
+input feature map, X ∈RC×H×W
+Y
+output feature map
+W
+learnable kernel weight
+FC
+fully-connected layer
+Conv
+convolution
+GAP
+global average pooling
+GMP
+global max pooling
+[
+]
+concatenation
+δ
+ReLU activation [51]
+σ
+sigmoid activation
+tanh
+tanh activation
+Softmax
+softmax activation
+BN
+batch normalization [52]
+Expand
+expan input by repetition
+is shown in Fig. 1 and further explained in Fig. 2: it is
+based around data domain. Some methods consider the
+question of when the important data occurs, or others where it
+occurs, etc., and accordingly try to ﬁnd key times or locations
+in the data. We divide existing attention methods into
+six categories which include four basic categories: channel
+attention (what to pay attention to [50]), spatial attention (where
+to pay attention), temporal attention (when to pay attention)
+and branch channel (which to pay attention to), along with two
+hybrid combined categories: channel & spatial attention and
+spatial & temporal attention. These ideas are further brieﬂy
+summarized together with related works in Tab. 2.
+The main contributions of this paper are:
+•
+a systematic review of visual attention methods, cov-
+ering the uniﬁed description of attention mechanisms,
+the development of visual attention mechanisms as
+well as current research,
+•
+a categorisation grouping attention methods accord-
+ing to their data domain, allowing us to link visual
+attention methods independently of their particular
+application, and
+•
+suggestions for future research in visual attention.
+Sec. 2 considers related surveys, then Sec. 3 is the main
+body of our survey. Suggestions for future research are given
+in Sec. 4 and ﬁnally, we give conclusions in Sec. 5.
+2
+OTHER SURVEYS
+In this section, we brieﬂy compare this paper to various
+existing surveys which have reviewed attention methods
+and visual transformers. Chaudhari et al. [140] provide
+a survey of attention models in deep neural networks
+which concentrates on their application to natural language
+processing, while our work focuses on computer vision.
+Three more speciﬁc surveys [141], [142], [143] summarize the
+development of visual transformers while our paper reviews
+attention mechanisms in vision more generally, not just self-
+attention mechanisms. Wang et al. [144] present a survey of
+attention models in computer vision, but it only considers
+RNN-based attention models, which form just a part of our
+survey. In addition, unlike previous surveys, we provide
+a classiﬁcation which groups various attention methods
+according to their data domain, rather than according to
+their ﬁeld of application. Doing so allows us to concentrate
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+3
+SENet
+2017.09.05
+(It proposes to
+adaptively recalibrate
+channel by using
+attention weight)
+Non-Local Network
+2017.11.21
+(It first successfully
+uses self-attention to
+model non-local
+relationship in
+computer vision)
+CBAM
+2018.07.17
+(It proposes tp
+combine channel
+attention with spatial
+attention)
+Highway Network
+2015.07.22
+(It proposes to
+combine different 
+branches by using
+attention method)
+RAM
+2014.06.24
+(It adopts RNN and
+reinforcement learning
+to achieve spatial
+attention)
+ViT
+2020.10.22
+(The first pure
+transformer structure
+achieves great results
+in computer vision)
+STN
+2015.06.05
+(It proposes to select
+important region by
+learning affine
+transformation)
+2018-2020
+(Some popular
+attention related
+network such as
+SAGAN, OCNet,
+DANet, EMANet,
+OCRNet and HamNet)
+2020-Now
+(Various transformer 
+variants such as PCT,
+Deformable DETR DeiT,
+T2T-ViT, IPT,PVT and
+Swin-Transformer)
+Fig. 3. Brief summary of key developments in attention in computer vision, which have loosely occurred in four phases. Phase 1 adopted RNNs to
+construct attention, a representative method being RAM [31]. Phase 2 explicitly predicted important regions, a representative method being STN [32].
+Phase 3 implicitly completed the attention process, a representative method being SENet [5]. Phase 4 used self-attention methods [15], [33], [34].
+TABLE 2
+Brief summary of attention categories and key related works.
+Attention category
+Description
+Related work
+Channel attention
+Generate attention mask across the channel domain and
+use it to select important channels.
+[5], [37], [53], [54], [55], [56], [57], [58] [25], [59],
+[60]
+Spatial attention
+Generate attention mask across spatial domains and use
+it to select important spatial regions (e.g. [15], [61]) or
+predict the most relevant spatial position directly (e.g. [7],
+[31]).
+[8], [9], [15], [21], [31], [32], [34], [35] , [22], [26],
+[62], [63], [64], [65], [66], [67] , [41], [68], [69], [70],
+[71], [72], [73], [74] , [8], [34], [42], [43], [75], [76],
+[77], [78] , [27], [44], [45], [46], [79], [80], [81], [82]
+, [61], [83], [84], [85], [86], [87], [88], [89] , [47],
+[90], [91], [92], [93], [94], [95], [96] , [97], [98], [99],
+[100], [101], [102], [103], [104] , [20], [105], [106],
+[107], [108], [109]
+Temporal attention
+Generate attention mask in time and use it to select key
+frames.
+[110], [111], [112]
+Branch attention
+Generate attention mask across the different branches
+and use it to select important branches.
+[113], [114], [115], [116]
+Channel & spatial atten-
+tion
+Predict channel and spatial attention masks separately
+(e.g. [6], [117]) or generate a joint 3-D channel, height,
+width attention mask directly (e.g. [118], [119]) and use
+it to select important features.
+[6], [50], [117], [119], [120], [121], [122],
+[10],
+[101], [118], [123], [124], [125], [126] , [13], [14],
+[127], [128], [129]
+Spatial & temporal at-
+tention
+Compute temporal and spatial attention masks sepa-
+rately (e.g. [16], [130]), or produce a joint spatiotemporal
+attention mask (e.g. [131]), to focus on informative
+regions.
+[130], [132], [133], [134], [135], [136], [137], [138],
+[139]
+on the attention methods in their own right, rather than
+treating them as supplementary to other tasks.
+3
+ATTENTION METHODS IN COMPUTER VISION
+In this section, we ﬁrst sum up a general form for the
+attention mechanism based on the recognition process of
+human visual system in Sec. 3.1. Then we review various
+categories of attention models given in Fig. 1, with a
+subsection dedicated to each category. In each, we tabularize
+representative works for that category. We also introduce
+that category of attention strategy more deeply, considering
+its development in terms of motivation, formulation and
+function.
+3.1
+General form
+When seeing a scene in our daily life, we will focus on the
+discriminative regions, and process these regions quickly.
+The above process can be formulated as:
+Attention = f(g(x), x)
+(1)
+Here g(x) can represent to generate attention which
+corresponds to the process of attending to the discriminative
+regions. f(g(x), x) means processing input x based on the
+attention g(x) which is consistent with processing critical
+regions and getting information.
+With the above deﬁnition, we ﬁnd that almost all existing
+attention mechanisms can be written into the above formu-
+lation. Here we take self-attention [15] and squeeze-and-
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+4
+Channel
+attention
+SENet
+Improve squeeze 
+module
+Improve excitation 
+module
+Improve both squeeze 
+and excitation module
+GSoP-Net, FcaNet, etc.
+ECANet
+SRM, GCT, etc.
+DRAW, Glimpse Net, etc.
+DCN, DCN V2, etc.
+Spatial attention
+RNN-based attention
+Predict the relevant 
+region explicitly
+Self-attention based
+Predict a soft mask 
+implicitly
+RAM
+Non-local
+GENet
+STN
+Visual Transformers
+Local self-attention
+Efficient self-attention
+DETR, ViT, etc.
+SASA, SAN, etc.
+CCNet, EMANet, etc.
+Branch attention
+SKNet, ReNeSt,  etc.
+Dynamic Conv.
+Combining features of 
+different branches
+Combine different 
+convolution kernels
+Highway 
+Network
+CondConv
+Channel & 
+Spatial attention
+CBAM, BAM, scSE et al.
+Split channel attention 
+and spatial attention
+SimAM, Strip Pooling, 
+SCNet
+Directly Estimate 3D 
+attention map
+Residual 
+attention
+Triplet Attention
+Cross-dimension 
+interaction
+Coordinate Attention, 
+DANet
+Long-range 
+dependencies
+RGA
+Relation-aware 
+attention
+Attention 
+Mechanisms
+Temporal 
+attention
+Combining local 
+attention and global 
+attention
+Self-attention based
+TAM
+GLTR
+Temporal & 
+Spatial attention
+Split temporal 
+attention and spatial 
+attention
+Jointly produce spatial 
+and temporal attention 
+RSTAN
+STA
+Pairwise relation-
+based
+STGCN
+Fig. 4. Developmental context of visual attention.
+excitation(SE) attention [5] as examples. For self-attention,
+g(x) and f(g(x), x) can be written as
+Q, K, V = Linear(x)
+(2)
+g(x) = Softmax(QK)
+(3)
+f(g(x), x) = g(x)V
+(4)
+(5)
+For SE, g(x) and f(g(x), x) can be written as
+g(x) = Sigmoid(MLP(GAP(x)))
+(6)
+f(g(x), x) = g(x)x
+(7)
+In the following, we will introduce various attention
+mechanisms and specify them to the above formulation.
+3.2
+Channel Attention
+In deep neural networks, different channels in different
+feature maps usually represent different objects [50]. Channel
+attention adaptively recalibrates the weight of each channel,
+and can be viewed as an object selection process, thus
+determining what to pay attention to. Hu et al. [5] ﬁrst
+proposed the concept of channel attention and presented
+SENet for this purpose. As Fig. 4 shows, and we discuss
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+5
+shortly, three streams of work continue to improve channel
+attention in different ways.
+In this section, we ﬁrst summarize the representative
+channel attention works and specify process g(x) and
+f(g(x), x) described as Eq. 1 in Tab. 3 and Fig. 5. Then
+we discuss various channel attention methods along with
+their development process respectively.
+3.2.1
+SENet
+SENet [5] pioneered channel attention. The core of SENet
+is a squeeze-and-excitation (SE) block which is used to collect
+global information, capture channel-wise relationships and
+improve representation ability.
+SE blocks are divided into two parts, a squeeze module
+and an excitation module. Global spatial information is
+collected in the squeeze module by global average pooling.
+The excitation module captures channel-wise relationships
+and outputs an attention vector by using fully-connected
+layers and non-linear layers (ReLU and sigmoid). Then, each
+channel of the input feature is scaled by multiplying the
+corresponding element in the attention vector. Overall, a
+squeeze-and-excitation block Fse (with parameter θ) which
+takes X as input and outputs Y can be formulated as:
+s = Fse(X, θ) = σ(W2δ(W1GAP(X)))
+(8)
+Y = sX
+(9)
+SE blocks play the role of emphasizing important channels
+while suppressing noise. An SE block can be added after each
+residual unit [145] due to their low computational resource
+requirements. However, SE blocks have shortcomings. In
+the squeeze module, global average pooling is too simple
+to capture complex global information. In the excitation
+module, fully-connected layers increase the complexity of the
+model. As Fig. 4 indicates, later works attempt to improve the
+outputs of the squeeze module (e.g. GSoP-Net [54]), reduce
+the complexity of the model by improving the excitation
+module (e.g. ECANet [37]), or improve both the squeeze
+module and the excitation module (e.g. SRM [55]).
+3.2.2
+GSoP-Net
+An SE block captures global information by only using global
+average pooling (i.e. ﬁrst-order statistics), which limits its
+modeling capability, in particular the ability to capture high-
+order statistics.
+To address this issue, Gao et al. [54] proposed to improve
+the squeeze module by using a global second-order pooling
+(GSoP) block to model high-order statistics while gathering
+global information.
+Like an SE block, a GSoP block also has a squeeze
+module and an excitation module. In the squeeze module,
+a GSoP block ﬁrstly reduces the number of channels from
+c to c′ (c′ < c) using a 1x1 convolution, then computes a
+c′ × c′ covariance matrix for the different channels to obtain
+their correlation. Next, row-wise normalization is performed
+on the covariance matrix. Each (i, j) in the normalized
+covariance matrix explicitly relates channel i to channel j.
+In the excitation module, a GSoP block performs row-wise
+convolution to maintain structural information and output a
+vector. Then a fully-connected layer and a sigmoid function
+are applied to get a c-dimensional attention vector. Finally, it
+multiplies the input features by the attention vector, as in an
+SE block. A GSoP block can be formulated as:
+s = Fgsop(X, θ) = σ(WRC(Cov(Conv(X))))
+(10)
+Y = sX
+(11)
+Here, Conv(·) reduces the number of channels, Cov(·)
+computes the covariance matrix and RC(·) means row-wise
+convolution.
+By using second-order pooling, GSoP blocks have im-
+proved the ability to collect global information over the
+SE block. However, this comes at the cost of additional
+computation. Thus, a single GSoP block is typically added
+after several residual blocks.
+3.2.3
+SRM
+Motivated by successes in style transfer, Lee et al. [55] pro-
+posed the lightweight style-based recalibration module (SRM).
+SRM combines style transfer with an attention mechanism. Its
+main contribution is style pooling which utilizes both mean
+and standard deviation of the input features to improve
+its capability to capture global information. It also adopts
+a lightweight channel-wise fully-connected (CFC) layer, in
+place of the original fully-connected layer, to reduce the
+computational requirements.
+Given an input feature map X ∈RC×H×W , SRM ﬁrst
+collects global information by using style pooling (SP(·))
+which combines global average pooling and global standard
+deviation pooling. Then a channel-wise fully connected
+(CFC(·)) layer (i.e. fully connected per channel), batch nor-
+malization BN and sigmoid function σ are used to provide
+the attention vector. Finally, as in an SE block, the input
+features are multiplied by the attention vector. Overall, an
+SRM can be written as:
+s = Fsrm(X, θ) = σ(BN(CFC(SP(X))))
+(12)
+Y = sX
+(13)
+The SRM block improves both squeeze and excitation mod-
+ules, yet can be added after each residual unit like an SE
+block.
+3.2.4
+GCT
+Due to the computational demand and number of parameters
+of the fully connected layer in the excitation module, it
+is impractical to use an SE block after each convolution
+layer. Furthermore, using fully connected layers to model
+channel relationships is an implicit procedure. To overcome
+the above problems, Yang et al. [56] propose the gated channel
+transformation (GCT) to efﬁciently collect information while
+explicitly modeling channel-wise relationships.
+Unlike previous methods, GCT ﬁrst collects global in-
+formation by computing the l2-norm of each channel. Next,
+a learnable vector α is applied to scale the feature. Then a
+competition mechanism is adopted by channel normalization
+to interact between channels. Like other common normal-
+ization methods, a learnable scale parameter γ and bias β
+are applied to rescale the normalization. However, unlike
+previous methods, GCT adopts tanh activation to control
+the attention vector. Finally, it not only multiplies the input
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+6
+by the attention vector but also adds an identity connection.
+GCT can be written as:
+s = Fgct(X, θ) = tanh(γCN(αNorm(X)) + β)
+(14)
+Y = sX + X,
+(15)
+where α, β and γ are trainable parameters. Norm(·) indicates
+the L2-norm of each channel. CN is channel normalization.
+A GCT block has fewer parameters than an SE block, and
+as it is lightweight, can be added after each convolutional
+layer of a CNN.
+3.2.5
+ECANet
+To avoid high model complexity, SENet reduces the number
+of channels. However, this strategy fails to directly model
+correspondence between weight vectors and inputs, reducing
+the quality of results. To overcome this drawback, Wang
+et al. [37] proposed the efﬁcient channel attention (ECA)
+block which instead uses a 1D convolution to determine
+the interaction between channels, instead of dimensionality
+reduction.
+An ECA block has similar formulation to an SE block
+including a squeeze module for aggregating global spatial
+information and an efﬁcient excitation module for modeling
+cross-channel interaction. Instead of indirect correspondence,
+an ECA block only considers direct interaction between
+each channel and its k-nearest neighbors to control model
+complexity. Overall, the formulation of an ECA block is:
+s = Feca(X, θ) = σ(Conv1D(GAP(X)))
+(16)
+Y = sX
+(17)
+where Conv1D(·) denotes 1D convolution with a kernel of
+shape k across the channel domain, to model local cross-
+channel interaction. The parameter k decides the coverage
+of interaction, and in ECA the kernel size k is adaptively
+determined from the channel dimensionality C instead of by
+manual tuning, using cross-validation:
+k = ψ(C) =
+
+log2(C)
+γ
++ b
+γ
+
+odd
+(18)
+where γ and b are hyperparameters. |x|odd indicates the
+nearest odd function of x.
+Compared to SENet, ECANet has an improved excitation
+module, and provides an efﬁcient and effective block which
+can readily be incorporated into various CNNs.
+3.2.6
+FcaNet
+Only using global average pooling in the squeeze module
+limits representational ability. To obtain a more powerful
+representation ability, Qin et al. [57] rethought global infor-
+mation captured from the viewpoint of compression and
+analysed global average pooling in the frequency domain.
+They proved that global average pooling is a special case of
+the discrete cosine transform (DCT) and used this observa-
+tion to propose a novel multi-spectral channel attention.
+Given an input feature map X ∈RC×H×W , multi-
+spectral channel attention ﬁrst splits X into many parts
+xi ∈RC′×H×W . Then it applies a 2D DCT to each part
+xi. Note that a 2D DCT can use pre-processing results to
+reduce computation. After processing each part, all results
+are concatenated into a vector. Finally, fully connected layers,
+ReLU activation and a sigmoid are used to get the attention
+vector as in an SE block. This can be formulated as:
+s = Ffca(X, θ) = σ(W2δ(W1[(DCT(Group(X)))]))
+(19)
+Y = sX
+(20)
+where Group(·) indicates dividing the input into many
+groups and DCT(·) is the 2D discrete cosine transform.
+This work based on information compression and discrete
+cosine transforms achieves excellent performance on the
+classiﬁcation task.
+3.2.7
+EncNet
+Inspired by SENet, Zhang et al. [53] proposed the context
+encoding module (CEM) incorporating semantic encoding loss
+(SE-loss) to model the relationship between scene context
+and the probabilities of object categories, thus utilizing global
+scene contextual information for semantic segmentation.
+Given an input feature map X ∈RC×H×W , a CEM ﬁrst
+learns K cluster centers D = {d1, . . . , dK} and a set of
+smoothing factors S = {s1, . . . , sK} in the training phase.
+Next, it sums the difference between the local descriptors
+in the input and the corresponding cluster centers using
+soft-assignment weights to obtain a permutation-invariant
+descriptor. Then, it applies aggregation to the descriptors of
+the K cluster centers instead of concatenation for computa-
+tional efﬁciency. Formally, CEM can be written as:
+ek =
+PN
+i=1 e−sk||Xi−dk||2(Xi −dk)
+PK
+j=1 e−sj||Xi−dj||2
+(21)
+e =
+K
+X
+k=1
+φ(ek)
+(22)
+s = σ(We)
+(23)
+Y = sX
+(24)
+where dk ∈RC and sk ∈R are learnable parameters.
+φ denotes batch normalization with ReLU activation. In
+addition to channel-wise scaling vectors, the compact con-
+textual descriptor e is also applied to compute the SE-loss
+to regularize training, which improves the segmentation of
+small objects.
+Not only does CEM enhance class-dependent feature
+maps, but it also forces the network to consider big and
+small objects equally by incorporating SE-loss. Due to its
+lightweight architecture, CEM can be applied to various
+backbones with only low computational overhead.
+3.2.8
+Bilinear Attention
+Following GSoP-Net [54], Fang et al. [146] claimed that
+previous attention models only use ﬁrst-order information
+and disregard higher-order statistical information. They thus
+proposed a new bilinear attention block (bi-attention) to capture
+local pairwise feature interactions within each channel, while
+preserving spatial information.
+Bi-attention employs the attention-in-attention (AiA) mech-
+anism to capture second-order statistical information: the
+outer point-wise channel attention vectors are computed
+from the output of the inner channel attention. Formally,
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+7
+Feature
+GAP
+FC
+ReLU
+FC
+Sigmoid
+Output
+Feature
+Conv2d
+Cov pool
+RW Conv
+FC
+Sigmoid
+Output
+(a)SE Block
+(b)GSoP Block
+Feature
+BN
+GAP
+CFC
+Sigmoid
+Output
+(c)SRM Block
+STD
+Feature
+L2-norm
+CN
+tanh
+Output
+(d)GCT Block
+!
+"
+#
+Feature
+GAP
+Conv1d
+Sigmoid
+Output
+(e)ECA Block
+Feature
+DCT
+FC
+ReLU
+FC
+Sigmoid
+Output
+(f)Fca Block
+Feature
+FC
+Sigmoid
+Output
+(g)Enc Block
+Encode
+Fig. 5.
+Various channel attention mechanisms. GAP=global average pooling, GMP=global max pooling, FC=fully-connected layer, Cov
+pool=Covariance pooling, RW Conv=row-wise convolution, CFC=channel-wise fully connected, CN=channel normalization, DCT=discrete cosine
+transform.
+TABLE 3
+Representative channel attention mechanisms ordered by category and publication date. Their key aims are to emphasize important channels and
+capture global information. Application areas include: Cls = classiﬁcation, Det = detection, SSeg = semantic segmentation, ISeg = instance
+segmentation, ST = style transfer, Action = action recognition.g(x) and f(g(x), x) are the attention process described by Eq. 1. Ranges means the
+ranges of attention map. S or H means soft or hard attention.(A) channel-wise product. (I) emphasize important channels, (II) capture global
+information.
+Category
+Method
+Publication
+Tasks
+g(x)
+f(g(x), x)
+Ranges
+S or H
+Goals
+Squeeze-and-
+excitation
+network
+SENet [5]
+CVPR2018
+Cls, Det
+global average pooling
+-> MLP -> sigmoid.
+(A)
+(0,1)
+S
+(I),(II)
+Improve
+squeeze module
+EncNet [53]
+CVPR2018
+SSeg
+encoder -> MLP -> sig-
+moid.
+(A)
+(0,1)
+S
+(I),(II)
+GSoP-Net [54]
+CVPR2019
+Cls
+2nd-order
+pooling
+->
+convolution & MLP ->
+sigmoid
+(A)
+(0,1)
+S
+(I),(II)
+FcaNet [57]
+ICCV2021
+Cls, Det,
+ISeg
+discrete
+cosine
+trans-
+form -> MLP -> sig-
+moid.
+(A)
+(0,1)
+S
+(I),(II)
+Improve excita-
+tion module
+ECANet [37]
+CVPR2020
+Cls, Det,
+ISeg
+global average pooling
+-> conv1d -> sigmoid.
+(A)
+(0,1)
+S
+(I),(II)
+Improve
+both
+squeeze
+and
+excitation
+module
+SRM [55]
+arXiv2019
+Cls, ST
+style pooling -> convolu-
+tion & MLP -> sigmoid.
+(A)
+(0,1)
+S
+(I),(II)
+GCT [56]
+CVPR2020
+Cls, Det,
+Action
+compute L2-norm on
+spatial -> channel nor-
+malization -> tanh.
+(A)
+(-1,1)
+S
+(I),(II)
+given the input feature map X, bi-attention ﬁrst uses bilinear
+pooling to capture second-order information
+ex = Bi(φ(X)) = Vec(UTri(φ(X)φ(X)T ))
+(25)
+where φ denotes an embedding function used for dimen-
+sionality reduction, φ(x)T is the transpose of φ(x) across
+the channel domain, Utri(·) extracts the upper triangular
+elements of a matrix and Vec(·) is vectorization. Then bi-
+attention applies the inner channel attention mechanism to
+the feature map ex ∈R
+c′(c′+1)
+2
+×H×W
+bx = ω(GAP(ex))ϕ(ex)
+(26)
+Here ω and ϕ are embedding functions. Finally the output
+feature map bx is used to compute the spatial channel atten-
+tion weights of the outer point-wise attention mechanism:
+s = σ(bx)
+(27)
+Y = sX
+(28)
+The bi-attention block uses bilinear pooling to model the
+local pairwise feature interactions along each channel, while
+preserving the spatial information. Using the proposed AiA,
+the model pays more attention to higher-order statistical
+information compared with other attention-based models.
+Bi-attention can be incorporated into any CNN backbone to
+improve its representational power while suppressing noise.
+3.3
+Spatial Attention
+Spatial attention can be seen as an adaptive spatial region
+selection mechanism: where to pay attention. As Fig. 4 shows,
+RAM [31], STN [32], GENet [61] and Non-Local [15] are
+representative of different kinds of spatial attention methods.
+RAM represents RNN-based methods. STN represents those
+use a sub-network to explicitly predict relevant regions.
+GENet represents those that use a sub-network implicitly to
+predict a soft mask to select important regions. Non-Local
+represents self-attention related methods. In this subsection,
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+8
+we ﬁrst summarize representative spatial attention mecha-
+nisms and specify process g(x) and f(g(x), x) described as
+Eq. 1 in Tab. 4, then discuss them according to Fig. 4.
+3.3.1
+RAM
+Convolutional neural networks have huge computational
+costs, especially for large inputs. In order to concentrate
+limited computing resources on important regions, Mnih et
+al. [31] proposed the recurrent attention model (RAM) that
+adopts RNNs [147] and reinforcement learning (RL) [148]
+to make the network learn where to pay attention. RAM
+pioneered the use of RNNs for visual attention, and was
+followed by many other RNN-based methods [21], [35], [88].
+As shown in Fig. 6, the RAM has three key elements: (A)
+a glimpse sensor, (B) a glimpse network and (C) an RNN
+model. The glimpse sensor takes a coordinate lt−1 and an
+image Xt. It outputs multiple resolution patches ρ(Xt, lt−1)
+centered on lt−1. The glimpse network fg(θ(g)) includes a
+glimpse sensor and outputs the feature representation gt
+for input coordinate lt−1 and image Xt. The RNN model
+considers gt and an internal state ht−1 and outputs the next
+center coordinate lt and the action at, e.g. the softmax result
+in an image classiﬁcation task. Since the whole process is not
+differentiable, it applies reinforcement learning strategies in
+the update process.
+This provides a simple but effective method to focus
+the network on key regions, thus reducing the number of
+calculations performed by the network, especially for large
+inputs, while improving image classiﬁcation results.
+3.3.2
+Glimpse Network
+Inspired by how humans perform visual recognition se-
+quentially, Ba et al. [88] proposed a deep recurrent network,
+similar to RAM [31], capable of processing a multi-resolution
+crop of the input image, called a glimpse, for multiple object
+recognition task. The proposed network updates its hidden
+state using a glimpse as input, and then predicts a new object
+as well as the next glimpse location at each step. The glimpse
+is usually much smaller than the whole image, which makes
+the network computationally efﬁcient.
+The proposed deep recurrent visual attention model
+consists of a context network, glimpse network, recurrent
+network, emission network, and classiﬁcation network. First,
+the context network takes the down-sampled whole image as
+input to provide the initial state for the recurrent network as
+well as the location of the ﬁrst glimpse. Then, at the current
+time step t, given the current glimpse xt and its location
+tuple lt, the goal of the glimpse network is to extract useful
+information, expressed as
+gt = fimage(X) · floc(lt)
+(29)
+where fimage(X) and floc(lt) are non-linear functions which
+both output vectors having the same dimension, and ·
+denotes element-wise product, used for fusing information
+from two branches. Then, the recurrent network, which con-
+sists of two stacked recurrent layers, aggregates information
+gathered from each individual glimpse. The outputs of the
+recurrent layers are:
+r(1)
+t
+= f (1)
+rec (gt, r(1)
+t−1)
+(30)
+r(2)
+t
+= f (2)
+rec (r(1)
+t , r(2)
+t−1)
+(31)
+Given the current hidden state r(2)
+t
+of the recurrent network,
+the emission network predicts where to crop the next glimpse.
+Formally, it can be written as
+lt+1 = femis(r(2)
+t )
+(32)
+Finally, the classiﬁcation network outputs a prediction for the
+class label y based on the hidden state r(1)
+t
+of the recurrent
+network
+y = fcls(r(1)
+t )
+(33)
+Compared to a CNN operating on the entire image, the
+computational cost of the proposed model is much lower, and
+it can naturally tackle images of different sizes because it only
+processes a glimpse in each step. Robustness is additionally
+improved by the recurrent attention mechanism, which also
+alleviates the problem of over-ﬁtting. This pipeline can be
+incorporated into any state-of-the-art CNN backbones or
+RNN units.
+3.3.3
+Hard and soft attention
+To visualize where and what an image caption generation
+model should focus on, Xu et al. [35] introduced an attention-
+based model as well as two variant attention mechanisms,
+hard attention and soft attention.
+Given a set of feature vectors a = {a1, . . . , aL}, ai ∈RD
+extracted from the input image, the model aims to produce
+a caption by generating one word at each time step. Thus
+they adopt a long short-term memory (LSTM) network as
+a decoder; an attention mechanism is used to generate a
+contextual vector zt conditioned on the feature set a and the
+previous hidden state ht−1, where t denotes the time step.
+Formally, the weight αt,i of the feature vector ai at the t-th
+time step is deﬁned as
+et,i = fatt(ai, ht−1)
+(34)
+αt,i =
+exp(et,i)
+PL
+k=1 exp(et,k)
+(35)
+where fatt is implemented by a multilayer perceptron condi-
+tioned on the previous hidden state ht−1. The positive weight
+αt,i can be interpreted either as the probability that location i
+is the right place to focus on (hard attention), or as the relative
+importance of location i to the next word (soft attention). To
+obtain the contextual vector zt, the hard attention mechanism
+assigns a multinoulli distribution parametrized by {αt,i} and
+views zt as a random variable:
+p(st,i = 1|a, ht−1) = αt,i
+(36)
+zt =
+L
+X
+i=1
+st,iai
+(37)
+On the other hand, the soft attention mechanism directly
+uses the expectation of the context vector zt,
+zt =
+L
+X
+i=1
+αt,iai
+(38)
+The use of the attention mechanism improves the in-
+terpretability of the image caption generation process by
+allowing the user to understand what and where the model
+is focusing on. It also helps to improve the representational
+capability of the network.
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+9
+TABLE 4
+Representative spatial attention mechanisms sorted by category and date. Application areas include: Cls = classiﬁcation, FGCls = ﬁne-grained
+classiﬁcation, Det = detection, SSeg = semantic segmentation, ISeg = instance segmentation, ST = style transfer, Action = action recognition, ICap =
+image captioning.g(x) and f(g(x), x) are the attention process described by Eq. 1. Ranges means the ranges of attention map. S or H means soft or
+hard attention.(A) choose region according to the prediction. (B) element-wise product, (C)aggregate information via attention map. (I)focus the
+network on discriminative regions, (II) avoid excessive computation for large input images, (III) provide more transformation invariance, (IV) capture
+long-range dependencies, (V) denoise input feature map (VI) adaptively aggregate neighborhood information, (VII) reduce inductive bias.
+Category
+Method
+Publication
+Tasks
+g(x)
+f(g(x), x)
+Ranges
+S or H
+Goals
+RNN-based
+methods
+RAM [31]
+NIPS2014
+Cls
+use RNN to recurrently
+predict
+important
+re-
+gions
+(A)
+(0,1)
+H
+(I), (II).
+Hard and soft
+attention [35]
+ICML2015
+ICap
+a)compute similarity be-
+tween visual features
+and
+previous
+hidden
+state -> interpret atten-
+tion weight.
+(C)
+(0,1)
+S, H
+(I).
+Predict the rele-
+vant region ex-
+plictly
+STN [32]
+NIPS2015
+Cls, FG-
+Cls
+use sub-network to pre-
+dict an afﬁne transfor-
+mation.
+(A)
+(0,1)
+H
+(I), (III).
+DCN [7]
+ICCV2017
+Det,
+SSeg
+use sub-network to pre-
+dict offset coordinates.
+(A)
+(0,1)
+H
+(I), (III).
+Predict the rele-
+vant region im-
+plictly
+GENet [61]
+NIPS2018
+Cls, Det
+average
+pooling
+or
+depth-wise convolution
+->
+interpolation
+->
+sigmoid
+(B)
+(0,1)
+S
+(I).
+PSANet [87]
+ECCV2018
+SSeg
+predict an attention map
+using a sub-network.
+(C)
+(0,1)
+S
+(I), (IV).
+Self-attention
+based methods
+Non-Local [15]
+CVPR2018
+Action,
+Det,
+ISeg
+Dot product between
+query and key -> soft-
+max
+(C)
+(0,1)
+S
+(I), (IV),
+(V)
+SASA [43]
+NeurIPS2019
+Cls, Det
+Dot product between
+query and key -> soft-
+max.
+(C)
+(0,1)
+S
+(I), (VI)
+ViT [34]
+ICLR2021
+Cls
+divide the feature map
+into multiple groups -
+> Dot product between
+query and key -> soft-
+max.
+(C)
+(0,1)
+S
+(I),(IV),
+(VII).
+3.3.4
+Attention Gate
+Previous approaches to MR segmentation usually operate on
+particular regions of interest (ROI), which requires excessive
+and wasteful use of computational resources and model
+parameters. To address this issue, Oktay et al. [19] proposed
+a simple and yet effective mechanism, the attention gate
+(AG), to focus on targeted regions while suppressing feature
+activations in irrelevant regions.
+Given the input feature map X and the gating signal
+G ∈RC′×H×W which is collected at a coarse scale and
+contains contextual information, the attention gate uses
+additive attention to obtain the gating coefﬁcient. Both the
+input X and the gating signal are ﬁrst linearly mapped
+to an RF ×H×W dimensional space, and then the output
+is squeezed in the channel domain to produce a spatial
+attention weight map S ∈R1×H×W . The overall process can
+be written as
+S = σ(ϕ(δ(φx(X) + φg(G))))
+(39)
+Y = SX
+(40)
+where ϕ, φx and φg are linear transformations implemented
+as 1 × 1 convolutions.
+The attention gate guides the model’s attention to impor-
+tant regions while suppressing feature activation in unrelated
+areas. It substantially enhances the representational power of
+the model without a signiﬁcant increase in computing cost or
+number of model parameters due to its lightweight design.
+It is general and modular, making it simple to use in various
+CNN models.
+3.3.5
+STN
+The property of translation equivariance makes CNNs
+suitable for processing image data. However, CNNs lack
+other transformation invariance such as rotational invariance,
+scaling invariance and warping invariance. To achieve these
+attributes while making CNNs focus on important regions,
+Jaderberg et al. [32] proposed spatial transformer networks
+(STN) that use an explicit procedure to learn invariance to
+translation, scaling, rotation and other more general warps,
+making the network pay attention to the most relevant
+regions. STN was the ﬁrst attention mechanism to explicitly
+predict important regions and provide a deep neural network
+with transformation invariance. Various following works [7],
+[36] have had even greater success.
+Taking a 2D image as an example, a 2D afﬁne transforma-
+tion can be formulated as:
+θ11
+θ12
+θ13
+θ21
+θ22
+θ23
+
+= floc(U)
+(41)
+xs
+i
+ys
+i
+
+=
+θ11
+θ12
+θ13
+θ21
+θ22
+θ23
+ 
+
+xt
+i
+yt
+i
+1
+
+.
+(42)
+Here, U is the input feature map, and floc can be any
+differentiable function, such as a lightweight fully-connected
+network or convolutional neural network. xs
+i and ys
+i are
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+10
+Fig. 6. Attention process in RAM [31]. (A): a glimpse sensor takes image and center coordinates as input and outputs multiple resolution patches. (B):
+a glimpse network includes a glimpse sensor, taking image and center coordinates as input and outputting a feature vector. (C) the entire network
+recurrently uses a glimpse network, outputting the predicted result as well as the next center coordinates. Figure is taken from [31].
+coordinates in the output feature map, while xt
+i and yt
+i are
+corresponding coordinates in the input feature map and
+the θ matrix is the learnable afﬁne matrix. After obtaining
+the correspondence, the network can sample relevant input
+regions using the correspondence. To ensure that the whole
+process is differentiable and can be updated in an end-to-
+end manner, bilinear sampling is used to sample the input
+features
+STNs focus on discriminative regions automatically and
+learn invariance to some geometric transformations.
+3.3.6
+Deformable Convolutional Networks
+With similar purpose to STNs, Dai et al. [7] proposed
+deformable convolutional networks (deformable ConvNets) to
+be invariant to geometric transformations, but they pay
+attention to the important regions in a different manner.
+Speciﬁcally, deformable ConvNets do not learn an afﬁne
+transformation. They divide convolution into two steps,
+ﬁrstly sampling features on a regular grid R from the input
+feature map, then aggregating sampled features by weighted
+summation using a convolution kernel. The process can be
+written as:
+Y (p0) =
+X
+pi∈R
+w(pi)X(p0 + pi)
+(43)
+R = {(−1, −1), (−1, 0), . . . , (1, 1)}
+(44)
+The deformable convolution augments the sampling process
+by introducing a group of learnable offsets ∆pi which can
+be generated by a lightweight CNN. Using the offsets ∆pi,
+the deformable convolution can be formulated as:
+Y (p0) =
+X
+pi∈R
+w(pi)X(p0 + pi + ∆pi).
+(45)
+Through the above method, adaptive sampling is achieved.
+However, ∆pi is a ﬂoating point value unsuited to grid
+sampling. To address this problem, bilinear interpolation is
+used. Deformable RoI pooling is also used, which greatly
+improves object detection.
+Deformable ConvNets adaptively select the important
+regions and enlarge the valid receptive ﬁeld of convolutional
+neural networks; this is important in object detection and
+semantic segmentation tasks.
+3.3.7
+Self-attention and variants
+Self-attention was proposed and has had great success in
+the ﬁeld of natural language processing (NLP) [33], [38], [39],
+[149], [150], [151], [152]. Recently, it has also shown the
+potential to become a dominant tool in computer vision [8],
+[15], [34], [78], [153]. Typically, self-attention is used as a
+spatial attention mechanism to capture global information.
+We now summarize the self-attention mechanism and its
+common variants in computer vision.
+Due to the localisation of the convolutional operation,
+CNNs have inherently narrow receptive ﬁelds [154], [155],
+which limits the ability of CNNs to understand scenes
+globally. To increase the receptive ﬁeld, Wang et al. [15]
+introduced self-attention into computer vision.
+Taking a 2D image as an example, given a feature map
+F ∈RC×H×W , self-attention ﬁrst computes the queries,
+keys and values Q, K, V ∈RC′×N, N = H × W by linear
+projection and reshaping operations. Then self-attention can
+be formulated as:
+A = (a)i,j = Softmax(QKT ),
+(46)
+Y = AV,
+(47)
+where A ∈RN×N is the attention matrix and αi,j is the
+relationship between the i-th and j-th elements. The whole
+process is shown in Fig. 7(left). Self-attention is a powerful
+tool to model global information and is useful in many visual
+tasks [9], [22], [26], [62], [63], [64], [65], [66], [67].
+However, the self-attention mechanism has several short-
+comings, particularly its quadratic complexity, which limit its
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+11
+applicability. Several variants have been introduced to allevi-
+ate these problems. The disentangled non-local approach [74]
+improves self-attention’s accuracy and effectiveness, but
+most variants focus on reducing its computational complex-
+ity.
+CCNet [41] regards the self-attention operation as a
+graph convolution and replaces the densely-connected graph
+processed by self-attention with several sparsely-connected
+graphs. To do so, it proposes criss-cross attention which
+considers row attention and column attention recurrently
+to obtain global information. CCNet reduces the complexity
+of self-attention from O(N 2) to O(N
+√
+N).
+EMANet [40] views self-attention in terms of expectation
+maximization (EM). It proposes EM attention which adopts
+the EM algorithm to get a set of compact bases instead of
+using all points as reconstruction bases. This reduces the
+complexity from O(N 2) to O(NK), where K is the number
+of compact bases.
+ANN [68] suggests that using all positional features as
+key and vectors is redundant and adopts spatial pyramid
+pooling [156], [157] to obtain a few representative key and
+value features to use instead, to reduce computation.
+GCNet [69] analyses the attention map used in self-
+attention and ﬁnds that the global contexts obtained by self-
+attention are similar for different query positions in the same
+image. Thus, it ﬁrst proposes to predict a single attention map
+shared by all query points, and then gets global information
+from a weighted sum of input features according to this
+attention map. This is like average pooling, but is a more
+general process for collecting global information.
+A2Net [70] is motivated by SENet to divide attention
+into feature gathering and feature distribution processes,
+using two different kinds of attention. The ﬁrst aggregates
+global information via second-order attention pooling and
+the second distributes the global descriptors by soft selection
+attention.
+GloRe [71] understands self-attention from a graph
+learning perspective. It ﬁrst collects N input features into
+M
+≪N nodes and then learns an adjacency matrix
+of global interactions between nodes. Finally, the nodes
+distribute global information to input features. A similar
+idea can be found in LatentGNN [72], MLP-Mixer [158] and
+ResMLP [159].
+OCRNet [73] proposes the concept of object-contextual
+representation which is a weighted aggregation of all object
+regions’ representations in the same category, such as a
+weighted average of all car region representations. It replaces
+the key and vector with this object-contextual representation
+leading to successful improvements in both speed and
+effectiveness.
+The disentangled non-local approach was motivated by [15],
+[69]. Yin et al [74] deeply analyzed the self-attention mecha-
+nism resulting in the core idea of decoupling self-attention
+into a pairwise term and a unary term. The pairwise term
+focuses on modeling relationships while the unary term
+focuses on salient boundaries. This decomposition prevents
+unwanted interactions between the two terms, greatly im-
+proving semantic segmentation, object detection and action
+recognition.
+HamNet [42] models capturing global relationships as
+a low-rank completion problem and designs a series of
+white-box methods to capture global context using matrix
+decomposition. This not only reduces the complexity, but
+increases the interpretability of self-attention.
+EANet [75] proposes that self-attention should only
+consider correlation in a single sample and should ignore
+potential relationships between different samples. To explore
+the correlation between different samples and reduce com-
+putation, it makes use of an external attention that adopts
+learnable, lightweight and shared key and value vectors. It
+further reveals that using softmax to normalize the attention
+map is not optimal and presents double normalization as a
+better alternative.
+In addition to being a complementary approach to
+CNNs, self-attention also can be used to replace convolu-
+tion operations for aggregating neighborhood information.
+Convolution operations can be formulated as dot products
+between the input feature X and a convolution kernel W:
+Y c
+i,j =
+X
+a,b∈{0,...,k−1}
+Wa,b,cXˆa,ˆb
+(48)
+where
+ˆa = i + a −⌊k/2⌋,
+ˆb = j + b −⌊k/2⌋,
+(49)
+k is the kernel size and c indicates the channel. The above
+formulation can be viewed as a process of aggregating neigh-
+borhood information by using a weighted sum through a
+convolution kernel. The process of aggregating neighborhood
+information can be deﬁned more generally as:
+Yi,j =
+X
+a,b∈{0,...,k−1}
+Rel(i, j, ˆa,ˆb)f(Xˆa,ˆb)
+(50)
+where Rel(i, j, ˆa,ˆb) is the relation between position (i,j) and
+position (ˆa, ˆb). With this deﬁnition, local self-attention is a
+special case.
+For example, SASA [43] writes this as
+Yi,j =
+X
+a,b∈Nk(i,j)
+Softmaxab(qT
+ijkab + qijra−i,b−j)vab
+(51)
+where q, k and v are linear projections of input feature x, and
+ra−i,b−j is the relative positional embedding of (i, j) and
+(a, b).
+We now consider several speciﬁc works using local self-
+attention as basic neural network blocks
+SASA [43] suggests that using self-attention to collect
+global information is too computationally intensive and
+instead adopts local self-attention to replace all spatial
+convolution in a CNN. The authors show that doing so
+improves speed, number of parameters and quality of results.
+They also explores the behavior of positional embedding and
+show that relative positional embeddings [160] are suitable.
+Their work also studies how to combinie local self-attention
+with convolution.
+LR-Net [76] appeared concurrently with SASA. It also
+studies how to model local relationships by using local
+self-attention. A comprehensive study probed the effects of
+positional embedding, kernel size, appearance composability
+and adversarial attacks.
+SAN [77] explored two modes, pairwise and patchwise, of
+utilizing attention for local feature aggregation. It proposed
+a novel vector attention adaptive both in content and
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+12
+Fig. 7. Vision transformer [34]. Left: architecture. Vision transformer ﬁrst
+splits the image into different patches and projects them into feature
+space where a transformer encoder processes them to produce the ﬁnal
+result. Right: basic vision transformer block with multi-head attention core.
+Figure is taken from [34].
+Fig. 8. Left: Self-attention. Right: Multi-head self-attention. Figure
+from [33].
+channel, and assessed its effectiveness both theoretically and
+practically. In addition to providing signiﬁcant improvements
+in the image domain, it also has been proven useful in 3D
+point cloud processing [80].
+3.3.8
+Vision Transformers
+Transformers have had great success in natural language
+processing [33], [38], [149], [150], [152], [161]. Recently,
+iGPT [78] and DETR [8] demonstrated the huge potential for
+transformer-based models in computer vision. Motivated by
+this, Dosovitskiy et al [34] proposed the vision transformer
+(ViT) which is the ﬁrst pure transformer architecture for
+image processing. It is capable of achieving comparable
+results to modern convolutional neural networks.
+As Fig 7 shows, the main part of ViT is the multi-head
+attention (MHA) module. MHA takes a sequence as input.
+It ﬁrst concatenates a class token with the input feature
+F ∈RN×C, where N is the number of pixels. Then it gets
+Q, K ∈RN×C′ and V ∈RN×C by linear projection. Next,
+Q, K and V are divided into H heads in the channel domain
+and self-attention separately applied to them. The MHA
+approach is shown in Fig. 8. ViT stacks a number of MHA
+layers with fully connected layers, layer normalization [162]
+and the GELU [163] activation function.
+ViT demonstrates that a pure attention-based network can
+achieve better results than a convolutional neural network
+especially for large datasets such as JFT-300 [164] and
+ImageNet-21K [165].
+Following ViT, many transformer-based architectures
+such as PCT [27], IPT [79], T2T-ViT [44], DeepViT [166],
+SETR
+[81],
+PVT
+[45],
+CaiT
+[167],
+TNT
+[82],
+Swin-
+transformer [46], Query2Label [83], MoCoV3 [84], BEiT [85],
+SegFormer [86], FuseFormer [168] and MAE [169] have
+appeared, with excellent results for many kind of visual tasks
+including image classiﬁcation, object detection, semantic
+segmentation, point cloud processing, action recognition and
+self-supervised learning.
+A detailed survey of vision transformers is omitted here
+as other recent surveys [141], [142], [143], [170] comprehen-
+sively review the use of transformer methods for visual tasks.
+3.3.9
+GENet
+Inspired by SENet, Hu et al. [61] designed GENet to capture
+long-range spatial contextual information by providing a
+recalibration function in the spatial domain.
+GENet combines part gathering and excitation operations.
+In the ﬁrst step, it aggregates input features over large neigh-
+borhoods and models the relationship between different
+spatial locations. In the second step, it ﬁrst generates an
+attention map of the same size as the input feature map,
+using interpolation. Then each position in the input feature
+map is scaled by multiplying by the corresponding element
+in the attention map. This process can be described by:
+g = fgather(X),
+(52)
+s = fexcite(g) = σ(Interp(g)),
+(53)
+Y = sX.
+(54)
+Here, fgather can take any form which captures spatial
+correlations, such as global average pooling or a sequence of
+depth-wise convolutions; Interp(·) denotes interpolation.
+The gather-excite module is lightweight and can be in-
+serted into each residual unit like an SE block. It emphasizes
+important features while suppressing noise.
+3.3.10
+PSANet
+Motivated by success in capturing long-range dependencies
+in convolutional neural networks, Zhao et al. [87] presented
+the novel PSANet framework to aggregate global informa-
+tion. It models information aggregation as an information
+ﬂow and proposes a bidirectional information propagation
+mechanism to make information ﬂow globally.
+PSANet formulates information aggregation as:
+zi =
+X
+j∈Ω(i)
+F(xi, xj, ∆ij)xj
+(55)
+where ∆ij indicates the positional relationship between i
+and j. F(xi, xj, ∆ij) is a function that takes xi, xj and ∆ij
+into consideration to controls information ﬂow from j to i.
+Ωi represents the aggregation neighborhood of position i; if
+we wish to capture global information, Ωi should include all
+spatial positions.
+Due
+to
+the
+complexity
+of
+calculating
+function
+F(xi, xj, ∆ij), it is decomposed into an approximation:
+F(xi, xj, ∆ij) ≈F∆ij(xi) + F∆ij(xj)
+(56)
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+13
+Fig. 9. Attention map results from [34]. The network focuses on the discriminative regions of each image. Figure from [34].
+whereupon Eq. 55 can be simpliﬁed to:
+zi =
+X
+j∈Ω(i)
+F∆ij(xi)xj +
+X
+j∈Ω(i)
+F∆ij(xj)xj.
+(57)
+The ﬁrst term can be viewed as collecting information at
+position i while the second term distributes information at
+position j. Functions F∆ij(xi) and F∆ij(xj) can be seen as
+adaptive attention weights.
+The above process aggregates global information while
+emphasizing the relevant features. It can be added to the end
+of a convolutional neural network as an effective complement
+to greatly improve semantic segmentation.
+3.4
+Temporal Attention
+Temporal attention can be seen as a dynamic time selection
+mechanism determining when to pay attention, and is thus
+usually used for video processing. Previous works [171],
+[172] often emphasise how to capture both short-term and
+long-term cross-frame feature dependencies. Here, we ﬁrst
+summarize representative temporal attention mechanisms
+and specify process g(x) and f(g(x), x) described as Eq. 1 in
+Tab. 5, and then discuss various such mechanisms according
+to the order in Fig. 4.
+3.4.1
+Self-attention and variants
+RNN and temporal pooling or weight learning have been
+widely used in work on video representation learning to
+capture interaction between frames, but these methods have
+limitations in terms of either efﬁciency or temporal relation
+modeling.
+To overcome them, Li et al. [171] proposed a global-
+local temporal representation (GLTR) to exploit multi-scale
+temporal cues in a video sequence. GLTR consists of a dilated
+temporal pyramid (DTP) for local temporal context learning
+and a temporal self attention module for capturing global
+temporal interaction. DTP adopts dilated convolution with
+dilatation rates increasing progressively to cover various
+temporal ranges, and then concatenates the various outputs
+to aggregate multi-scale information. Given input frame-wise
+features F = {f1, . . . fT }, DTP can be written as:
+{f (r)
+1 , . . . , f (r)
+T } = DConv(r)(F)
+(58)
+f ′
+t = [f (1)
+t
+; . . . f (2n−1)
+t
+. . . ; f (2N−1)
+t
+]
+(59)
+where DConv(r)(·) denotes dilated convolution with dilation
+rate r. The self-attention mechanism adopts convolution
+layers followed by batch normalization and ReLU activation
+to generate the query Q ∈Rd×T , the key K ∈Rd×T and
+the value V ∈Rd×T based on the input feature map F ′ =
+{f ′
+1, . . . f ′
+T }, which can be written as
+Fout = g(V Softmax(QT K)) + F ′
+(60)
+where g denotes a linear mapping implemented by a convo-
+lution.
+The short-term temporal contextual information from
+neighboring frames helps to distinguish visually similar
+regions while the long-term temporal information serves to
+overcome occlusions and noise. GLTR combines the advan-
+tages of both modules, enhancing representation capability
+and suppressing noise. It can be incorporated into any state-
+of-the-art CNN backbone to learn a global descriptor for
+a whole video. However, the self-attention mechanism has
+quadratic time complexity, limiting its application.
+3.4.2
+TAM
+To capture complex temporal relationships both efﬁciently
+and ﬂexibly, Liu et al. [172] proposed a temporal adaptive
+module (TAM). It adopts an adaptive kernel instead of self-
+attention to capture global contextual information, with
+lower time complexity than GLTR [171].
+TAM has two branches, a local branch and a global branch.
+Given the input feature map X ∈RC×T ×H×W , global spatial
+average pooling GAP is ﬁrst applied to the feature map to
+ensure TAM has a low computational cost. Then the local
+branch in TAM employs several 1D convolutions with ReLU
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+14
+TABLE 5
+Representative temporal attention mechanisms sorted by date. ReID = re-identiﬁcation, Action = action recognition. Ranges means the ranges of
+attention map. S or H means soft or hard attention. g(x) and f(g(x), x) are the attention process described by Eq. 1. (A) aggregate information via
+attention map. (I) exploit multi-scale short-term temporal contextual information (II)capture long-term temporal feature dependencies (III) capture local
+temporal contexts
+Category
+Method
+Publication
+Tasks
+g(x)
+f(g(x), x)
+Ranges
+S or H
+Goals
+Self-attention
+based methods
+GLTR [171]
+ICCV2019
+ReID
+dilated 1D Convs -> self-
+attention in temporal di-
+mension
+(A)
+(0,1)
+S
+(I), (II).
+Combine
+local
+attention
+and
+global attention
+TAM [172]
+Arxiv2020
+Action
+a)local:
+global
+spatial
+average pooling -> 1D
+Convs, b) global: global
+spatial average pooling
+-> MLP -> adaptive con-
+volution
+(A)
+(0,1)
+S
+(II),
+(III).
+nonlinearity across the temporal domain to produce location-
+sensitive importance maps for enhancing frame-wise features.
+The local branch can be written as
+s = σ(Conv1D(δ(Conv1D(GAP(X)))))
+(61)
+X1 = sX.
+(62)
+Unlike the local branch, the global branch is location invari-
+ant and focuses on generating a channel-wise adaptive kernel
+based on global temporal information in each channel. For
+the c-th channel, the kernel can be written as
+Θc = Softmax(FC2(δ(FC1(GAP(X)c))))
+(63)
+where Θc ∈RK and K is the adaptive kernel size. Finally,
+TAM convolves the adaptive kernel Θ with X1
+out:
+Y = Θ ⊗X1
+(64)
+With the help of the local branch and global branch, TAM
+can capture the complex temporal structures in video and
+enhance per-frame features at low computational cost. Due
+to its ﬂexibility and lightweight design, TAM can be added
+to any existing 2D CNNs.
+3.5
+Branch Attention
+Branch attention can be seen as a dynamic branch selection
+mechanism: which to pay attention to, used with a multi-branch
+structure. We ﬁrst summarize representative branch atten-
+tion mechanisms and specify process g(x) and f(g(x), x)
+described as Eq. 1 in Tab. 6, then discuss various ones in
+detail.
+3.5.1
+Highway networks
+Inspired by the long short term memory network, Srivastava
+et al. [113] proposed highway networks that employ adaptive
+gating mechanisms to enable information ﬂows across layers
+to address the problem of training very deep networks.
+Supposing a plain neural network consists of L layers,
+and Hl(X) denotes a non-linear transformation on the l-th
+layer, a highway network can be expressed as
+Yl = Hl(Xl)Tl(Xl) + Xl(1 −Tl(Xl))
+(65)
+Tl(X) = σ(W T
+l X + bl)
+(66)
+where Tl(X) denotes the transform gate regulating the
+information ﬂow for the l-th layer. Xl and Yl are the inputs
+and outputs of the l-th layer.
+The gating mechanism and skip-connection structure
+make it possible to directly train very deep highway net-
+works using simple gradient descent methods. Unlike ﬁxed
+skip-connections, the gating mechanism adapts to the input,
+which helps to route information across layers. A highway
+network can be incorporated in any CNN.
+3.5.2
+SKNet
+Research in the neuroscience community suggests that visual
+cortical neurons adaptively adjust the sizes of their receptive
+ﬁelds (RFs) according to the input stimulus [174]. This
+inspired Li et al. [114] to propose an automatic selection
+operation called selective kernel (SK) convolution.
+SK convolution is implemented using three operations:
+split, fuse and select. During split, transformations with
+different kernel sizes are applied to the feature map to obtain
+different sized RFs. Information from all branches is then
+fused together via element-wise summation to compute the
+gate vector. This is used to control information ﬂows from the
+multiple branches. Finally, the output feature map is obtained
+by aggregating feature maps for all branches, guided by the
+gate vector. This can be expressed as:
+Uk = Fk(X)
+k = 1, . . . , K
+(67)
+U =
+K
+X
+k=1
+Uk
+(68)
+z = δ(BN(WGAP(U)))
+(69)
+s(c)
+k
+=
+eW (c)
+k
+z
+PK
+k=1 eW (c)
+k
+z
+k = 1, . . . , K,
+c = 1, . . . , C
+(70)
+Y =
+K
+X
+k=1
+skUk
+(71)
+Here, each transformation Fk has a unique kernel size to
+provide different scales of information for each branch. For
+efﬁciency, Fk is implemented by grouped or depthwise
+convolutions followed by dilated convolution, batch nor-
+malization and ReLU activation in sequence. t(c) denotes the
+c-th element of vector t, or the c-th row of matrix t.
+SK convolutions enable the network to adaptively adjust
+neurons’ RF sizes according to the input, giving a notable
+improvement in results at little computational cost. The gate
+mechanism in SK convolutions is used to fuse information
+from multiple branches. Due to its lightweight design, SK
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+15
+TABLE 6
+Representative branch attention mechanisms sorted by date. Cls = classiﬁcation, Det=Object Detection. g(x) and f(g(x), x) are the attention
+process described by Eq. 1.Ranges means the ranges of attention map. S or H means soft or hard attention. (A) element-wise product. (B)
+channel-wise product. (C) aggergate information via attention. (I)overcome the problem of vanishing gradient (II) dynamically fuse different branches.
+(III) adaptively select a suitable receptive ﬁeld (IV) improve the performance of standard convolution (be) dynamically fuse different convolution
+kernels.
+Category
+Method
+Publication
+Tasks
+g(x)
+f(g(x), x)
+Ranges
+S or H
+Goals
+Combine differ-
+ent branches
+Highway
+Net-
+work [113]
+ICML2015W
+Cls
+linear layer -> sigmoid
+(A)
+(0,1)
+S
+(I), (II).
+SKNet [114]
+CVPR2019
+Cls
+global average pooling
+-> MLP -> softmax
+(B)
+(0,1)
+S
+(II), (III)
+Combine differ-
+ent convolution
+kernels
+CondConv [173]
+NeurIPS2019
+Cls, Det
+global average pooling -
+> linear layer -> sigmoid
+(C)
+(0,1)
+S
+(IV),
+(V).
+convolution can be applied to any CNN backbone by replac-
+ing all large kernel convolutions. ResNeSt [115] also adopts
+this attention mechanism to improve the CNN backbone in a
+more general way, giving excellent results on ResNet [145]
+and ResNeXt [175].
+3.5.3
+CondConv
+A basic assumption in CNNs is that all convolution kernels
+are the same. Given this, the typical way to enhance the
+representational power of a network is to increase its depth
+or width, which introduces signiﬁcant extra computational
+cost. In order to more efﬁciently increase the capacity of
+convolutional neural networks, Yang et al. [173] proposed a
+novel multi-branch operator called CondConv.
+An ordinary convolution can be written
+Y = W ∗X
+(72)
+where ∗denotes convolution. The learnable parameter W
+is the same for all samples. CondConv adaptively combines
+multiple convolution kernels and can be written as:
+Y = (α1W1 + · · · + αnWn) ∗X
+(73)
+Here, α is a learnable weight vector computed by
+α = σ(Wr(GAP(X)))
+(74)
+This process is equivalent to an ensemble of multiple experts,
+as shown in Fig. 10.
+CondConv makes full use of the advantages of the multi-
+branch structure using a branch attention method with little
+computing cost. It presents a novel manner to efﬁciently
+increase the capability of networks.
+3.5.4
+Dynamic Convolution
+The extremely low computational cost of lightweight CNNs
+constrains the depth and width of the networks, further
+decreasing their representational power. To address the above
+problem, Chen et al. [116] proposed dynamic convolution, a
+novel operator design that increases representational power
+with negligible additional computational cost and does not
+change the width or depth of the network in parallel with
+CondConv [173].
+Dynamic convolution uses K parallel convolution kernels
+of the same size and input/output dimensions instead of
+one kernel per layer. Like SE blocks, it adopts a squeeze-
+and-excitation mechanism to generate the attention weights
+for the different convolution kernels. These kernels are
+Fig. 10. CondConv [173]. (a) CondConv ﬁrst combines different con-
+volution kernels and then uses the combined kernel for convolution. (b)
+Mixture of experts ﬁrst uses multiple convolution kernels for convolution
+and then merges the results. While (a) and (b) are equivalent, (a) has
+much lower computational cost. Figure is taken from [173].
+then aggregated dynamically by weighted summation and
+applied to the input feature map X:
+s = softmax(W2δ(W1GAP(X)))
+(75)
+DyConv =
+K
+X
+i=1
+skConvk
+(76)
+Y = DyConv(X)
+(77)
+Here the convolutions are combined by summation of
+weights and biases of convolutional kernels.
+Compared to applying convolution to the feature
+map, the computational cost of squeeze-and-excitation and
+weighted summation is extremely low. Dynamic convolution
+thus provides an efﬁcient operation to improve representa-
+tional power and can be easily used as a replacement for any
+convolution.
+3.6
+Channel & Spatial Attention
+Channel & spatial attention combines the advantages of
+channel attention and spatial attention. It adaptively selects
+both important objects and regions [50]. The residual attention
+network [119] pioneered the ﬁeld of channel & spatial atten-
+tion, emphasizing the importance of informative features in
+both spatial and channel dimensions. It adopts a bottom-up
+structure consisting of several convolutions to produce a 3D
+(height, width, channel) attention map. However, it has high
+computational cost and limited receptive ﬁelds.
+To leverage global spatial information later works [6],
+[117] enhance discrimination of features by introducing
+global average pooling, as well as decoupling channel
+attention and spatial channel attention for computational
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+16
+efﬁciency. Other works [10], [101] apply self-attention mech-
+anisms for channel & spatial attention to explore pairwise
+interaction. Yet further works [120], [124] adopt the spatial-
+channel attention mechanism to enlarge the receptive ﬁeld.
+Representative channel & spatial attention mechanisms
+and speciﬁc process g(x) and f(g(x), x) described as Eq. 1
+are in given Tab. 7; we next discuss various ones in detail.
+3.6.1
+Residual Attention Network
+Inspired by the success of ResNet [145], Wang et al. [119]
+proposed the very deep convolutional residual attention
+network (RAN) by combining an attention mechanism with
+residual connections.
+Each attention module stacked in a residual attention
+network can be divided into a mask branch and a trunk
+branch. The trunk branch processes features, and can be
+implemented by any state-of-the-art structure including a
+pre-activation residual unit and an inception block. The mask
+branch uses a bottom-up top-down structure to learn a mask
+of the same size that softly weights output features from
+the trunk branch. A sigmoid layer normalizes the output to
+[0, 1] after two 1 × 1 convolution layers. Overall the residual
+attention mechanism can be written as
+s = σ(Conv1×1
+2
+(Conv1×1
+1
+(hup(hdown(X)))))
+(78)
+Xout = sf(X) + f(X)
+(79)
+where hup is a bottom-up structure, using max-pooling sev-
+eral times after residual units to increase the receptive ﬁeld,
+while hdown is the top-down part using linear interpolation to
+keep the output size the same as the input feature map. There
+are also skip-connections between the two parts, which are
+omitted from the formulation. f represents the trunk branch
+which can be any state-of-the-art structure.
+Inside each attention module, a bottom-up top-down
+feedforward structure models both spatial and cross-channel
+dependencies, leading to a consistent performance improve-
+ment. Residual attention can be incorporated into any
+deep network structure in an end-to-end training fashion.
+However, the proposed bottom-up top-down structure fails
+to leverage global spatial information. Furthermore, directly
+predicting a 3D attention map has high computational cost.
+3.6.2
+CBAM
+To enhance informative channels as well as important regions,
+Woo et al. [6] proposed the convolutional block attention module
+(CBAM) which stacks channel attention and spatial attention
+in series. It decouples the channel attention map and spatial
+attention map for computational efﬁciency, and leverages
+spatial global information by introducing global pooling.
+CBAM has two sequential sub-modules, channel and
+spatial. Given an input feature map X ∈RC×H×W it
+sequentially infers a 1D channel attention vector sc ∈RC
+and a 2D spatial attention map ss ∈RH×W . The formulation
+of the channel attention sub-module is similar to that of
+an SE block, except that it adopts more than one type of
+pooling operation to aggregate global information. In detail,
+it has two parallel branches using max-pool and avg-pool
+operations:
+F c
+avg = GAPs(X)
+(80)
+F c
+max = GMPs(X)
+(81)
+sc = σ(W2δ(W1F c
+avg) + W2δ(W1F c
+max))
+(82)
+Mc(X) = scX
+(83)
+where GAPs and GMPs denote global average pooling and
+global max pooling operations in the spatial domain. The
+spatial attention sub-module models the spatial relationships
+of features, and is complementary to channel attention.
+Unlike channel attention, it applies a convolution layer with
+a large kernel to generate the attention map
+F s
+avg = GAPc(X)
+(84)
+F s
+max = GMPc(X)
+(85)
+ss = σ(Conv([F s
+avg; F s
+max]))
+(86)
+Ms(X) = ssX
+(87)
+where Conv(·) represents a convolution operation, while
+GAPc and GMPc are global pooling operations in the channel
+domain. [] denotes concatenation over channels. The overall
+attention process can be summarized as
+X′ = Mc(X)
+(88)
+Y = Ms(X′)
+(89)
+Combining channel attention and spatial attention se-
+quentially, CBAM can utilize both spatial and cross-channel
+relationships of features to tell the network what to focus on
+and where to focus. To be more speciﬁc, it emphasizes useful
+channels as well as enhancing informative local regions. Due
+to its lightweight design, CBAM can be integrated into any
+CNN architecture seamlessly with negligible additional cost.
+Nevertheless, there is still room for improvement in the
+channel & spatial attention mechanism. For instance, CBAM
+adopts a convolution to produce the spatial attention map, so
+the spatial sub-module may suffer from a limited receptive
+ﬁeld.
+3.6.3
+BAM
+At the same time as CBAM, Park et al. [117] proposed
+the bottleneck attention module (BAM), aiming to efﬁciently
+improve the representational capability of networks. It uses
+dilated convolution to enlarge the receptive ﬁeld of the
+spatial attention sub-module, and build a bottleneck structure
+as suggested by ResNet to save computational cost.
+For a given input feature map X, BAM infers the channel
+attention sc ∈RC and spatial attention ss ∈RH×W in
+two parallel streams, then sums the two attention maps
+after resizing both branch outputs to RC×H×W . The channel
+attention branch, like an SE block, applies global average
+pooling to the feature map to aggregate global information,
+and then uses an MLP with channel dimensionality reduction.
+In order to utilize contextual information effectively, the
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+17
+TABLE 7
+Representative channel & spatial attention mechanisms sorted by date. Cls = classiﬁcation, ICap = image captioning, Det = detection, Seg =
+segmentation, ISeg = instance segmentation, KP = keypoint detection, ReID = re-identiﬁcation.g(x) and f(g(x), x) are the attention process
+described by Eq. 1. Ranges means the ranges of attention map. S or H means soft or hard attention. (A) element-wise product. (B) aggregate
+information via attention map.(I) focus the network on the discriminative region, (II) emphasize important channels, (III) capture long-range
+information, (IV) capture cross-domain interaction between any two domains.
+Category
+Method
+Publication
+Tasks
+g(x)
+f(g(x), x)
+Ranges
+S or H
+Goals
+Jointly
+predict
+channel
+&
+spatial attention
+map
+Residual Atten-
+tion [119]
+CVPR2017
+Cls
+top-down network ->
+bottom down network -
+> 1×1 Convs -> Sigmoid
+(A)
+(0,1)
+S
+(I), (II)
+SCNet [120]
+CVPR2020
+Cls, Det,
+ISeg,
+KP
+top-down network ->
+bottom down network
+-> identity add -> sig-
+moid
+(A)
+(0,1)
+S
+(II), (III)
+Strip
+Pooling [124]
+CVPR2020
+Seg
+a)horizontal/vertical
+global pooling -> 1D
+Conv
+->
+point-wise
+summation
+->
+1 × 1
+Conv -> Sigmoid
+(A)
+(0,1)
+S
+(I), (II),
+(III)
+Separately pre-
+dict channel &
+spatial attention
+maps
+SCA-CNN [50]
+CVPR2017
+ICap
+a)spatial: fuse hidden
+state -> 1 × 1 Conv
+-> Softmax, b)channel:
+global average pooling
+-> MLP -> Softmax
+(A)
+(0,1)
+S
+(I), (II),
+(III)
+CBAM [6]
+ECCV2018
+Cls, Det
+a)spatial: global pooling
+in channel dimension-
+>
+Conv
+->
+Sigmoid,
+b)channel: global pool-
+ing in spatial dimension
+-> MLP -> Sigmoid
+(A)
+(0,1)
+S
+(I), (II),
+(III)
+BAM [6]
+BMVC2018
+Cls, Det
+a)spatial: dilated Convs,
+b)channel: global aver-
+age pooling -> MLP,
+c)fuse two branches
+(A)
+(0,1)
+S
+(I), (II),
+(III)
+scSE [123]
+TMI2018
+Seg
+a)spatial: 1 × 1 Conv
+-> Sigmoid, b)channel:
+global average pooling
+->
+MLP
+->
+Sigmoid,
+c)fuse two branches
+(A)
+(0,1)
+S
+(I), (II),
+(III)
+Dual
+Attention [10]
+CVPR2019
+Seg
+a)spatial: self-attention
+in
+spatial
+dimension,
+b)channel: self-attention
+in channel dimension, c)
+fuse two branches
+(B)
+(0,1)
+S
+(I), (II),
+(III)
+RGA [101]
+CVPR2020
+ReID
+use self-attention to cap-
+ture pairwise relations
+->
+compute
+attention
+maps with the input and
+relation vectors
+(A)
+(0,1)
+S
+(I), (II),
+(III)
+Triplet
+Attention [121]
+WACV2021
+Cls, Det
+compute attention maps
+for pairs of domains ->
+fuse different branches
+(A)
+(0,1)
+S
+(I), (IV)
+spatial attention branch combines a bottleneck structure and
+dilated convolutions. Overall, BAM can be written as
+sc = BN(W2(W1GAP(X) + b1) + b2)
+(90)
+ss = BN(Conv1×1
+2
+(DC3×3
+2
+(DC3×3
+1
+(Conv1×1
+1
+(X)))))
+(91)
+s = σ(Expand(ss) + Expand(sc))
+(92)
+Y = sX + X
+(93)
+where Wi, bi denote weights and biases of fully connected
+layers respectively, Conv1×1
+1
+and Conv1×1
+2
+are convolution
+layers used for channel reduction. DC3×3
+i
+denotes a dilated
+convolution with 3 × 3 kernel, applied to utilize contextual
+information effectively. Expand expands the attention maps
+ss and sc to RC×H×W .
+BAM can emphasize or suppress features in both spatial
+and channel dimensions, as well as improving the representa-
+tional power. Dimensional reduction applied to both channel
+and spatial attention branches enables it to be integrated
+with any convolutional neural network with little extra
+computational cost. However, although dilated convolutions
+enlarge the receptive ﬁeld effectively, it still fails to capture
+long-range contextual information as well as encoding cross-
+domain relationships.
+3.6.4
+scSE
+To aggregate global spatial information, an SE block applies
+global pooling to the feature map. However, it ignores
+pixel-wise spatial information, which is important in dense
+prediction tasks. Therefore, Roy et al. [123] proposed spatial
+and channel SE blocks (scSE). Like BAM, spatial SE blocks are
+used, complementing SE blocks, to provide spatial attention
+weights to focus on important regions.
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+18
+Given the input feature map X, two parallel modules,
+spatial SE and channel SE, are applied to feature maps to
+encode spatial and channel information respectively. The
+channel SE module is an ordinary SE block, while the spatial
+SE module adopts 1 × 1 convolution for spatial squeezing.
+The outputs from the two modules are fused. The overall
+process can be written as
+sc = σ(W2δ(W1GAP(X)))
+(94)
+Xchn = scX
+(95)
+ss = σ(Conv1×1(X))
+(96)
+Xspa = ssX
+(97)
+Y = f(Xspa, Xchn)
+(98)
+where f denotes the fusion function, which can be maximum,
+addition, multiplication or concatenation.
+The proposed scSE block combines channel and spatial
+attention to enhance features as well as capturing pixel-wise
+spatial information. Segmentation tasks are greatly beneﬁted
+as a result. The integration of an scSE block in F-CNNs
+makes a consistent improvement in semantic segmentation
+at negligible extra cost.
+3.6.5
+Triplet Attention
+In CBAM and BAM, channel attention and spatial attention
+are computed independently, ignoring relationships between
+these two domains [121]. Motivated by spatial attention,
+Misra et al. [121] proposed triplet attention, a lightweight
+but effective attention mechanism to capture cross-domain
+interaction.
+Given an input feature map X, triplet attention uses
+three branches, each of which plays a role in capturing
+cross-domain interaction between any two domains from
+H, W and C. In each branch, rotation operations along
+different axes are applied to the input ﬁrst, and then a Z-
+pool layer is responsible for aggregating information in the
+zeroth dimension. Finally, a standard convolution layer with
+kernel size k × k models the relationship between the last
+two domains. This process can be written as
+X1 = Pm1(X)
+(99)
+X2 = Pm2(X)
+(100)
+s0 = σ(Conv0(Z-Pool(X)))
+(101)
+s1 = σ(Conv1(Z-Pool(X1)))
+(102)
+s2 = σ(Conv2(Z-Pool(X2)))
+(103)
+Y = 1
+3(s0X + Pm−1
+1 (s1X1) + Pm−1
+2 (s2X2))
+(104)
+where Pm1 and Pm2 denote rotation through 90◦anti-
+clockwise about the H and W axes respectively, while Pm−1
+i
+denotes the inverse. Z-Pool concatenates max-pooling and
+average pooling along the zeroth dimension.
+Y = Z-Pool(X) = [GMP(X); GAP(X)]
+(105)
+Unlike CBAM and BAM, triplet attention stresses the
+importance of capturing cross-domain interactions instead
+of computing spatial attention and channel attention inde-
+pendently. This helps to capture rich discriminative feature
+representations. Due to its simple but efﬁcient structure,
+triplet attention can be easily added to classical backbone
+networks.
+3.6.6
+SimAM
+Yang et al. [118] also stress the importance of learning
+attention weights that vary across both channel and spa-
+tial domains in proposing SimAM, a simple, parameter-
+free attention module capable of directly estimating 3D
+weights instead of expanding 1D or 2D weights. The design
+of SimAM is based on well-known neuroscience theory,
+thus avoiding need for manual ﬁne tuning of the network
+structure.
+Motivated by the spatial suppression phenomenon [176],
+they propose that a neuron which shows suppression effects
+should be emphasized and deﬁne an energy function for
+each neuron as:
+et(wt, bt, y, xi) = (yt −ˆt)2 +
+1
+M −1
+M−1
+X
+i=1
+(yo −ˆxi)
+(106)
+where ˆt = wtt+bt, ˆxi = wtxi+bt, and t and xi are the target
+unit and all other units in the same channel; i ∈1, . . . , N,
+and N = H × W.
+An optimal closed-form solution for Eq. 106 exists:
+e∗
+t =
+4(ˆσ2 + λ)
+(t −ˆµ)2 + 2ˆσ2 + 2λ
+(107)
+where ˆµ is the mean of the input feature and ˆσ2 is its variance.
+A sigmoid function is used to control the output range of
+the attention vector; an element-product is applied to get the
+ﬁnal output:
+Y = Sigmoid
+ 1
+E
+
+X
+(108)
+This work simpliﬁes the process of designing attention
+and successfully proposes a novel 3-D weight parameter-free
+attention module based on mathematics and neuroscience
+theories.
+3.6.7
+Coordinate attention
+An SE block aggregates global spatial information using
+global pooling before modeling cross-channel relationships,
+but neglects the importance of positional information. BAM
+and CBAM adopt convolutions to capture local relations,
+but fail to model long-range dependencies. To solve these
+problems, Hou et al. [129] proposed coordinate attention,
+a novel attention mechanism which embeds positional
+information into channel attention, so that the network can
+focus on large important regions at little computational cost.
+The coordinate attention mechanism has two consecutive
+steps, coordinate information embedding and coordinate
+attention generation. First, two spatial extents of pooling
+kernels encode each channel horizontally and vertically. In
+the second step, a shared 1 × 1 convolutional transformation
+function is applied to the concatenated outputs of the two
+pooling layers. Then coordinate attention splits the resulting
+tensor into two separate tensors to yield attention vectors
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+19
+with the same number of channels for horizontal and vertical
+coordinates of the input X along. This can be written as
+zh = GAPh(X)
+(109)
+zw = GAPw(X)
+(110)
+f = δ(BN(Conv1×1
+1
+([zh; zw])))
+(111)
+f h, f w = Split(f)
+(112)
+sh = σ(Conv1×1
+h
+(f h))
+(113)
+sw = σ(Conv1×1
+w
+(f w))
+(114)
+Y = Xshsw
+(115)
+where GAPh and GAPw denote pooling functions for vertical
+and horizontal coordinates, and sh ∈RC×1×W and sw ∈
+RC×H×1 represent corresponding attention weights.
+Using coordinate attention, the network can accurately
+obtain the position of a targeted object. This approach has
+a larger receptive ﬁeld than BAM and CBAM. Like an SE
+block, it also models cross-channel relationships, effectively
+enhancing the expressive power of the learned features. Due
+to its lightweight design and ﬂexibility, it can be easily used
+in classical building blocks of mobile networks.
+3.6.8
+DANet
+In the ﬁeld of scene segmentation, encoder-decoder struc-
+tures cannot make use of the global relationships between
+objects, whereas RNN-based structures heavily rely on the
+output of the long-term memorization. To address the above
+problems, Fu et al. [10] proposed a novel framework, the
+dual attention network (DANet), for natural scene image
+segmentation. Unlike CBAM and BAM, it adopts a self-
+attention mechanism instead of simply stacking convolutions
+to compute the spatial attention map, which enables the
+network to capture global information directly.
+DANet uses in parallel a position attention module and a
+channel attention module to capture feature dependencies
+in spatial and channel domains. Given the input feature
+map X, convolution layers are applied ﬁrst in the position
+attention module to obtain new feature maps. Then the
+position attention module selectively aggregates the features
+at each position using a weighted sum of features at all
+positions, where the weights are determined by feature
+similarity between corresponding pairs of positions. The
+channel attention module has a similar form except for
+dimensional reduction to model cross-channel relations.
+Finally the outputs from the two branches are fused to obtain
+ﬁnal feature representations. For simplicity, we reshape the
+feature map X to C × (H × W) whereupon the overall
+process can be written as
+Q,
+K,
+V = WqX,
+WkX,
+WvX
+(116)
+Y pos = X + V Softmax(QT K)
+(117)
+Y chn = X + Softmax(XXT )X
+(118)
+Y = Y pos + Y chn
+(119)
+where Wq, Wk, Wv ∈RC×C are used to generate new feature
+maps.
+The position attention module enables DANet to capture
+long-range contextual information and adaptively integrate
+similar features at any scale from a global viewpoint, while
+the channel attention module is responsible for enhancing
+useful channels as well as suppressing noise. Taking spa-
+tial and channel relationships into consideration explicitly
+improves the feature representation for scene segmentation.
+However, it is computationally costly, especially for large
+input feature maps.
+3.6.9
+RGA
+Unlike coordinate attention and DANet, which emphasise
+capturing long-range context, in relation-aware global attention
+(RGA) [101], Zhang et al. stress the importance of global
+structural information provided by pairwise relations, and
+uses it to produce attention maps.
+RGA comes in two forms, spatial RGA (RGA-S) and
+channel RGA (RGA-C). RGA-S ﬁrst reshapes the input feature
+map X to C × (H × W) and the pairwise relation matrix
+R ∈R(H×W )×(H×W ) is computed using
+Q = δ(W QX)
+(120)
+K = δ(W KX)
+(121)
+R = QT K
+(122)
+The relation vector ri at position i is deﬁned by stacking
+pairwise relations at all positions:
+ri = [R(i, :); R(:, i)]
+(123)
+and the spatial relation-aware feature yi can be written as
+Yi = [gc
+avg(δ(W ϕxi)); δ(W φri)]
+(124)
+where gc
+avg denotes global average pooling in the channel
+domain. Finally, the spatial attention score at position i is
+given by
+ai = σ(W2δ(W1yi))
+(125)
+RGA-C has the same form as RGA-S, except for taking the
+input feature map as a set of H × W-dimensional features.
+RGA uses global relations to generate the attention
+score for each feature node, so provides valuable structural
+information and signiﬁcantly enhances the representational
+power. RGA-S and RGA-C are ﬂexible enough to be used in
+any CNN network; Zhang et al. propose using them jointly
+in sequence to better capture both spatial and cross-channel
+relationships.
+3.6.10
+Self-Calibrated Convolutions
+Motivated by the success of group convolution, Liu et at [120]
+presented self-calibrated convolution as a means to enlarge the
+receptive ﬁeld at each spatial location.
+Self-calibrated convolution is used together with a stan-
+dard convolution. It ﬁrst divides the input feature X into
+X1 and X2 in the channel domain. The self-calibrated
+convolution ﬁrst uses average pooling to reduce the input
+size and enlarge the receptive ﬁeld:
+T1 = AvgPoolr(X1)
+(126)
+where r is the ﬁlter size and stride. Then a convolution
+is used to model the channel relationship and a bilinear
+interpolation operator Up is used to upsample the feature
+map:
+X′
+1 = Up(Conv2(T1))
+(127)
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+20
+Next, element-wise multiplication ﬁnishes the self-calibrated
+process:
+Y ′
+1 = Conv3(X1)σ(X1 + X′
+1)
+(128)
+Finally, the output feature map of is formed:
+Y1 = Conv4(Y ′
+1)
+(129)
+Y2 = Conv1(X2)
+(130)
+Y = [Y1; Y2]
+(131)
+Such self-calibrated convolution can enlarge the receptive
+ﬁeld of a network and improve its adaptability. It achieves
+excellent results in image classiﬁcation and certain down-
+stream tasks such as instance segmentation, object detection
+and keypoint detection.
+3.6.11
+SPNet
+Spatial pooling usually operates on a small region which
+limits its capability to capture long-range dependencies and
+focus on distant regions. To overcome this, Hou et al. [124]
+proposed strip pooling, a novel pooling method capable of
+encoding long-range context in either horizontal or vertical
+spatial domains.
+Strip pooling has two branches for horizontal and vertical
+strip pooling. The horizontal strip pooling part ﬁrst pools
+the input feature F ∈RC×H×W in the horizontal direction:
+y1 = GAPw(X)
+(132)
+Then a 1D convolution with kernel size 3 is applied in y to
+capture the relationship between different rows and channels.
+This is repeated W times to make the output yv consistent
+with the input shape:
+yh = Expand(Conv1D(y1))
+(133)
+Vertical strip pooling is performed in a similar way. Finally,
+the outputs of the two branches are fused using element-wise
+summation to produce the attention map:
+s = σ(Conv1×1(yv + yh))
+(134)
+Y = sX
+(135)
+The strip pooling module (SPM) is further developed in
+the mixed pooling module (MPM). Both consider spatial and
+channel relationships to overcome the locality of convolu-
+tional neural networks. SPNet achieves state-of-the-art results
+for several complex semantic segmentation benchmarks.
+3.6.12
+SCA-CNN
+As CNN features are naturally spatial, channel-wise and
+multi-layer, Chen et al. [50] proposed a novel spatial and
+channel-wise attention-based convolutional neural network (SCA-
+CNN). It was designed for the task of image captioning,
+and uses an encoder-decoder framework where a CNN ﬁrst
+encodes an input image into a vector and then an LSTM
+decodes the vector into a sequence of words. Given an input
+feature map X and the previous time step LSTM hidden
+state ht−1 ∈Rd, a spatial attention mechanism pays more
+attention to the semantically useful regions, guided by LSTM
+hidden state ht−1. The spatial attention model is:
+a(ht−1, X) = tanh(Conv1×1
+1
+(X) ⊕W1ht−1)
+(136)
+Φs(ht−1, X) = Softmax(Conv1×1
+2
+(a(ht−1, X)))
+(137)
+where ⊕represents addition of a matrix and a vector. Simi-
+larly, channel-wise attention aggregates global information
+ﬁrst, and then computes a channel-wise attention weight
+vector with the hidden state ht−1:
+b(ht−1, X) = tanh((W2GAP(X) + b2) ⊕W1ht−1) (138)
+Φc(ht−1, X) = Softmax(W3(b(ht−1, X)) + b3)
+(139)
+Overall, the SCA mechanism can be written in one of two
+ways. If channel-wise attention is applied before spatial
+attention, we have
+Y = f(X, Φs(ht−1, XΦc(ht−1, X)), Φc(ht−1, X))
+(140)
+and if spatial attention comes ﬁrst:
+Y = f(X, Φs(ht−1, X), Φc(ht−1, XΦs(ht−1, X)))
+(141)
+where f(·) denotes the modulate function which takes the
+feature map X and attention maps as input and then outputs
+the modulated feature map Y .
+Unlike previous attention mechanisms which consider
+each image region equally and use global spatial information
+to tell the network where to focus, SCA-Net leverages the
+semantic vector to produce the spatial attention map as well
+as the channel-wise attention weight vector. Being more than
+a powerful attention model, SCA-CNN also provides a better
+understanding of where and what the model should focus
+on during sentence generation.
+3.6.13
+GALA
+Most attention mechanisms learn where to focus using
+only weak supervisory signals from class labels, which
+inspired Linsley et al. [122] to investigate how explicit human
+supervision can affect the performance and interpretability
+of attention models. As a proof of concept, Linsley et al.
+proposed the global-and-local attention (GALA) module, which
+extends an SE block with a spatial attention mechanism.
+Given the input feature map X, GALA uses an attention
+mask that combines global and local attention to tell the
+network where and on what to focus. As in SE blocks, global
+attention aggregates global information by global average
+pooling and then produces a channel-wise attention weight
+vector using a multilayer perceptron. In local attention, two
+consecutive 1 × 1 convolutions are conducted on the input
+to produce a positional weight map. The outputs of the
+local and global pathways are combined by addition and
+multiplication. Formally, GALA can be represented as:
+sg = W2δ(W1GAP(x))
+(142)
+sl = Conv1×1
+2
+(δ(Conv1×1
+1
+(X)))
+(143)
+s∗
+g = Expand(sg)
+(144)
+s∗
+l = Expand(sl)
+(145)
+s = tanh(a(s∗
+g + s∗
+l ) + m · (s∗
+gs∗
+l ))
+(146)
+Y = sX
+(147)
+where a, m ∈RC are learnable parameters representing
+channel-wise weight vectors.
+Supervised by human-provided feature importance maps,
+GALA has signiﬁcantly improved representational power
+and can be combined with any CNN backbone.
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+21
+3.7
+Spatial & Temporal Attention
+Spatial & temporal attention combines the advantages of spa-
+tial attention and temporal attention as it adaptively selects
+both important regions and key frames. Some works [16],
+[130] compute temporal attention and spatial attention
+separately, while others [131] produce joint spatiotemporal
+attention maps. Further works focusing on capturing pair-
+wise relations [177]. Representative spatial & temporal
+attention attentions and speciﬁc process g(x) and f(g(x), x)
+described as Eq. 1 are summarised in Tab. 8. We next discuss
+speciﬁc spatial & temporal attention mechanisms according
+to the order in Fig. 4.
+3.7.1
+STA-LSTM
+In human action recognition, each type of action generally
+only depends on a few speciﬁc kinematic joints [130].
+Furthermore, over time, multiple actions may be performed.
+Motivated by these observations, Song et al. [130] proposed
+a joint spatial and temporal attention network based on
+LSTM [147], to adaptively ﬁnd discriminative features and
+keyframes. Its main attention-related components are a
+spatial attention sub-network, to select important regions,
+and a temporal attention sub-network, to select key frames.
+The spatial attention sub-network can be written as:
+st = Us tanh(WxsXt + Whshs
+t−1 + bsi) + bso
+(148)
+αt = Softmax(st)
+(149)
+Yt = αtXt
+(150)
+where Xt is the input feature at time t, Us, Whs, bsi, and bso
+are learnable parameters, and hs
+t−1 is the hidden state at step
+t −1. Note that use of the hidden state h means the attention
+process takes temporal relationships into consideration.
+The temporal attention sub-network is similar to the
+spatial branch and produces its attention map using:
+βt = δ(WxpXt + Whphp
+t−1 + bp).
+(151)
+It adopts a ReLU function instead of a normalization function
+for ease of optimization. It also uses a regularized objective
+function to improve convergence.
+Overall, this paper presents a joint spatiotemporal atten-
+tion method to focus on important joints and keyframes,
+with excellent results on the action recognition task.
+3.7.2
+RSTAN
+To capture spatiotemporal contexts in video frames, Du
+et al. [16] introduced spatiotemporal attention to adaptively
+identify key features in a global way.
+The spatiotemporal attention mechanism in RSTAN
+consists of a spatial attention module and a temporal
+attention module applied serially. Given an input feature
+map X ∈RD×T ×H×W and the previous hidden state ht−1
+of an RNN model, spatiotemporal attention aims to produce
+a spatiotemporal feature representation for action recognition.
+First, the given feature map X is reshaped to RD×T ×(H×W ),
+and we deﬁne X(n, k) as the feature vector for the k-th
+location of the n-th frame. At time t, the spatial attention
+mechanism aims to produce a global feature ln for each
+frame, which can be written as
+αt(n, k) = wα tanh(Whht−1 + WxX(n, k) + bα)
+(152)
+α∗
+t (n, k) = eγααt(n,k)/
+W ×H
+X
+j=1
+eγααt(n,k)
+(153)
+ln =
+H×W
+X
+k=1
+α∗
+t (n, k)X(n, k)
+(154)
+where γα is introduced to control the sharpness of the
+location-score map. After obtaining frame-wise features
+{l1, . . . , lT }, RSTAN uses a temporal attention mechanism to
+estimate the importance of each frame feature
+βt(n) = wβ tanh(W ′
+hht−1 + Wll(n) + bβ)
+(155)
+β∗
+t (n) = eγββt(n)/
+T
+X
+j=1
+eγββt(n)
+(156)
+φt =
+T
+X
+n=1
+β∗
+t (n)l(n)
+(157)
+The spatiotemporal attention mechanism used in RSTAN
+identiﬁes those regions in both spatial and temporal domains
+which are strongly related to the prediction in the current
+step of the RNN. This efﬁciently enhances the representation
+power of any 2D CNN.
+3.7.3
+STA
+Previous attention-based methods for video-based person
+re-identiﬁcation only assigned an attention weight to each
+frame and failed to capture joint spatial and temporal
+relationships. To address this issue, Fu et al. [131] propose a
+novel spatiotemporal attention (STA) approach, which assigns
+attention scores for each spatial region in different frames
+without any extra parameters.
+Given the feature maps of an input video {Xn|Xn ∈
+RC×H×W }N
+n=1, STA ﬁrst generates frame-wise attention
+maps by using the l2 norm on the squares sum in the channel
+domain:
+gn(h, w) =
+|| PC
+c=1 Xn(c, h, w)2||2
+PH
+h=1
+PW
+w=1 || PC
+c=1 Xn(c, h, w)2||2
+(158)
+Then both the feature maps and attention maps are divided
+into K local regions horizontally, each of which represents
+one part of the person. The spatial attention score for region
+k is obtained using
+sn,k =
+X
+(i,j)∈Regionk
+||gn(i, j)||1
+(159)
+To capture the relationships between regions in different
+frames, STA applies l1 normalization to the attention scores
+in the temporal domain, using
+S(n, k) =
+sn,k
+PN
+n=1 ||sn,k||1
+(160)
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+22
+TABLE 8
+Representative spatial & temporal attentions sorted by date. Action=action recognition, ReID = re-identiﬁcation. Ranges means the ranges of
+attention map. S or H means soft or hard attention. g(x) and f(g(x), x) are the attention process described by Eq. 1. (A)element-wise product.(B)
+aggregate information via attention map.(I) emphasize key points in both spatial and temporal domains, (II)capture global information.
+Category
+Method
+Publication
+Tasks
+g(x)
+f(g(x), x)
+Ranges
+S or H
+Goals
+Separately pre-
+dict
+spatial
+&
+temporal atten-
+tion
+STA-
+LSTM [130]
+AAAI2017
+Action
+a)spatial: fuse hidden
+state -> MLP -> Softmax,
+b)temporal: fuse hidden
+state -> MLP -> ReLU
+(A)
+(0,1),
+(0,+∞)
+S
+(I)
+RSTAN [16]
+TIP2018
+Action
+a)spatial: fuse hidden
+state -> MLP -> Softmax,
+b)temporal: fuse hidden
+state -> MLP -> Softmax
+(B)
+(0,1)
+S
+(I) (II)
+Jointly
+predict
+spatial & tempo-
+ral attention
+STA [131]
+AAAI2019
+ReID
+a) tenporal: produce per-
+frame attention maps us-
+ing l2 norm b) spatial:
+obtain spatial scores for
+each patch by summa-
+tion using l1 norm.
+(B)
+(0,1)
+S
+(I)
+Pairwise
+relation-based
+method
+STGCN [177]
+CVPR2020
+ReID
+construct a patch graph
+using pairwise similar-
+ity
+(B)
+(0,1)
+S
+(I)
+Finally, STA splits the input feature map Xi into K regions
+{Xn,1, . . . , Xn,K} and computes the output using
+Y 1 = [Xarg maxn S(n,1),1; . . . ; Xarg maxn S(n,K),K]
+(161)
+Y 2 = [
+N
+X
+n=1
+S(n, 1)Xn,1; . . . ;
+N
+X
+n=1
+S(n, K)Xn,K]
+(162)
+Y = [Y 1; Y 2]
+(163)
+Instead of computing spatial attention maps frame by
+frame, STA considers spatial and temporal attention infor-
+mation simultaneously, fully using the discriminative parts
+in both dimensions. This reduces the inﬂuence of occlusion.
+Because of its non-parametric design, STA can tackle input
+video sequences of variable length; it can be combined with
+any 2D CNN backbone.
+3.7.4
+STGCN
+To model the spatial relations within a frame and temporal
+relations across frames, Yang et al. [177] proposed a novel
+spatiotemporal graph convolutional network (STGCN) to learn
+a discriminative descriptor for a video. It constructs a
+patch graph using pairwise similarity, and then uses graph
+convolution to aggregate information.
+STGCN includes two parallel GCN branches, the tempo-
+ral graph module and the structural graph module. Given the
+feature maps of a video, STGCN ﬁrst horizontally partitions
+each frame into P patches and applies average pooling to
+generate patch-wise features x1, . . . , xN, where the total
+number of patches is N = TP. For the temporal module, it
+takes each patch as a graph node and construct a patch graph
+for the video, where the adjacency matrix bA is obtained by
+normalizing the pairwise relation matrix E, deﬁned as
+E(i, j) = (W φxi)T W φxj
+(164)
+A(i, j) = E2(i, j)/
+N
+X
+j=1
+E2(i, j)
+(165)
+bA = D−1
+2 (A + I)D−1
+2
+(166)
+where D(i, i) = PN
+j=1(A + I)(i, j). Given the adjacency
+matrix bA, the m-th graph convolution can be found using
+Xm = bAXm−1W m + Xm−1
+(167)
+where X ∈RN×c represents the hidden features for all
+patches and W m ∈Rc×c denotes the learnable weight matrix
+for the m-th layer. For the spatial module, STGCN follows a
+similar approach of adjacency matrix and graph convolution,
+except for modeling the spatial relations of different regions
+within a frame.
+Flattening spatial and temporal dimensions into a se-
+quence, STGCN applies the GCN to capture the spatiotempo-
+ral relationships of patches across different frames. Pairwise
+attention is used to obtain the weighted adjacency matrix.
+By leveraging spatial and temporal relationships between
+patches, STGCN overcomes the occlusion problem while also
+enhancing informative features. It can used with any CNN
+backbone to process video.
+4
+FUTURE DIRECTIONS
+We present our thoughts on potential future research direc-
+tions.
+4.1
+Necessary and sufﬁcient condition for attention
+We ﬁnd the Eq. 1 is a necessary condition but not a necessary
+and sufﬁcient condition. For instance, GoogleNet [178]
+conforms to the above formula, but does not belong to the
+attention mechanisms. Unfortunately, we ﬁnd it difﬁcult to
+ﬁnd a necessary and sufﬁcient condition for all attention
+mechanisms. The necessary and sufﬁcient conditions for the
+attention mechanism are still worth exploring which can
+promote our understanding of attention mechanisms.
+4.2
+General attention block
+At present, a special attention mechanism needs to be
+designed for each different task, which requires considerable
+effort to explore potential attention methods. For instance,
+channel attention is a good choice for image classiﬁcation,
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+23
+while spatial attention is well-suited to dense prediction
+tasks such as semantic segmentation and object detection.
+Channel attention focuses on what to pay attention to while
+spatial attention considers where to pay attention. Based on this
+observation, we encourage consideration as to whether there
+could be a general attention block that takes advantage of all
+kinds of attention mechanisms. For example, a soft selection
+mechanism (branch attention) could choose between channel
+attention, spatial attention and temporal attention according
+to the speciﬁc task undertaken.
+4.3
+Characterisation and interpretability
+Attention mechanisms are motivated by the human visual
+system and are a step towards the goal of building an inter-
+pretable computer vision system. Typically, attention-based
+models are understood by rendering attention maps, as in
+Fig. 9. However, this can only give an intuitive feel for what
+is happening, rather than precise understanding. However,
+applications in which security or safety are important, such
+as medical diagnostics and automated driving systems, often
+have stricter requirements. Better characterisation of how
+methods work, including modes of failure, is needed in such
+areas. Developing characterisable and interpretable attention
+models could make them more widely applicable.
+4.4
+Sparse activation
+We visualize some attention map and obtains consistent
+conclusion with ViT [34] shown in Fig. 9 that attention mech-
+anisms can produce sparse activation. There phenomenon
+give us a inspiration that sparse activation can achieve a
+strong performance in deep neural networks. It is worth
+noting that sparse activation is similar with human cognition.
+Those motivate us to explore which kind of architecture can
+simulate human visual system.
+4.5
+Attention-based pre-trained models
+Large-scale attention-based pre-trained models have had
+great success in natural language processing [85], [179].
+Recently, MoCoV3 [84], DINO [180], BEiT [85] and MAE [169]
+have demonstrated that attention-based models are also well
+suited to visual tasks. Due to their ability to adapt to varying
+inputs, attention-based models can deal with unseen objects
+and are naturally suited to transferring pretrained weights
+to a variety of tasks. We believe that the combination of pre-
+training and attention models should be further explored:
+training approach, model structures, pre-training tasks and
+the scale of data are all worth investigating.
+4.6
+Optimization
+SGD [181] and Adam [182] are well-suited for optimizing
+convolutional neural networks. For visual transformers,
+AdamW [183] works better. Recently, Chen et al. [184]
+signiﬁcantly improved visual transformers by using a novel
+optimizer, the sharpness-aware minimizer (SAM) [185]. It
+is clear that attention-based networks and convolutional
+neural networks are different models; different optimization
+methods may work better for different models. Investigating
+new optimzation methods for attention models is likely to
+be worthwhile.
+4.7
+Deployment
+Convolutional neural networks have a simple, uniform struc-
+ture which makes them easy to deploy on various hardware
+devices. However, it is difﬁcult to optimize complex and
+varied attention-based models on edge devices. Nevertheless,
+experiments in [46], [47], [48] show that attention-based
+models provide better results than convolutional neural
+networks, so it is worth trying to ﬁnd simple, efﬁcient
+and effective attention-based models which can be widely
+deployed.
+5
+CONCLUSIONS
+Attention mechanisms have become an indispensable tech-
+nique in the ﬁeld of computer vision in the era of deep
+learning. This survey has systematically reviewed and sum-
+marized attention mechanisms for deep neural networks
+in computer vision. We have grouped different attention
+methods according to their domain of operation, rather than
+by application task, and show that attention models can be
+regarded as an independent topic in their own right. We have
+concluded with some potential directions for future research.
+We hope that this work will encourage a variety of potential
+application developers to put attention mechanisms to use
+to improve their deep learning results. We also hope that
+this survey will give researchers a deeper understanding of
+various attention mechanisms and the relationships between
+them, as a springboard for future research.
+ACKNOWLEDGMENTS
+This work was supported by the Natural Science Foundation
+of China (Project 61521002, 62132012). We would like to
+thank Cheng-Ze Lu, Zhengyang Geng, Shilong liu, He Wang,
+Huiying Lu and Chenxi Huang for their helpful discussions
+and insightful suggestions.
+REFERENCES
+[1]
+L. Itti, C. Koch, and E. Niebur, “A model of saliency-based visual
+attention for rapid scene analysis,” IEEE Transactions on Pattern
+Analysis and Machine Intelligence, vol. 20, no. 11, pp. 1254–1259,
+1998.
+[2]
+M. Hayhoe and D. Ballard, “Eye movements in natural behavior,”
+Trends in cognitive sciences, vol. 9, no. 4, pp. 188–194, 2005.
+[3]
+R. A. Rensink, “The dynamic representation of scenes,” Visual
+cognition, vol. 7, no. 1-3, pp. 17–42, 2000.
+[4]
+M. Corbetta and G. L. Shulman, “Control of goal-directed and
+stimulus-driven attention in the brain,” Nature reviews neuroscience,
+vol. 3, no. 3, pp. 201–215, 2002.
+[5]
+J. Hu, L. Shen, S. Albanie, G. Sun, and E. Wu, “Squeeze-and-
+excitation networks,” 2019.
+[6]
+S. Woo, J. Park, J. Lee, and I. S. Kweon, “CBAM: convolutional
+block attention module,” in Computer Vision - ECCV 2018
+- 15th European Conference, Munich, Germany, September 8-14,
+2018, Proceedings, Part VII, ser. Lecture Notes in Computer
+Science, V. Ferrari, M. Hebert, C. Sminchisescu, and Y. Weiss,
+Eds., vol. 11211.
+Springer, 2018, pp. 3–19. [Online]. Available:
+https://doi.org/10.1007/978-3-030-01234-2_1
+[7]
+J. Dai, H. Qi, Y. Xiong, Y. Li, G. Zhang, H. Hu, and Y. Wei,
+“Deformable convolutional networks,” 2017.
+[8]
+N. Carion, F. Massa, G. Synnaeve, N. Usunier, A. Kirillov, and
+S. Zagoruyko, “End-to-end object detection with transformers,”
+2020.
+[9]
+Y. Yuan, L. Huang, J. Guo, C. Zhang, X. Chen, and J. Wang,
+“Ocnet: Object context network for scene parsing,” arXiv preprint
+arXiv:1809.00916, 2018.
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+24
+[10]
+J. Fu, J. Liu, H. Tian, Y. Li, Y. Bao, Z. Fang, and H. Lu, “Dual
+attention network for scene segmentation,” in Proceedings of the
+IEEE/CVF Conference on Computer Vision and Pattern Recognition
+(CVPR), June 2019.
+[11]
+J. Yang, P. Ren, D. Zhang, D. Chen, F. Wen, H. Li, and G. Hua,
+“Neural aggregation network for video face recognition,” 2017.
+[12]
+Q. Wang, T. Wu, H. Zheng, and G. Guo, “Hierarchical pyramid
+diverse attention networks for face recognition,” in Proceedings of
+the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+(CVPR), June 2020.
+[13]
+W. Li, X. Zhu, and S. Gong, “Harmonious attention network for
+person re-identiﬁcation,” in Proceedings of the IEEE conference on
+computer vision and pattern recognition, 2018, pp. 2285–2294.
+[14]
+B. Chen, W. Deng, and J. Hu, “Mixed high-order attention network
+for person re-identiﬁcation,” in Proceedings of the IEEE/CVF
+International Conference on Computer Vision, 2019, pp. 371–381.
+[15]
+X. Wang, R. Girshick, A. Gupta, and K. He, “Non-local neural
+networks,” in Proceedings of the IEEE Conference on Computer Vision
+and Pattern Recognition (CVPR), June 2018.
+[16]
+W. Du, Y. Wang, and Y. Qiao, “Recurrent spatial-temporal attention
+network for action recognition in videos,” IEEE Transactions on
+Image Processing, vol. 27, no. 3, pp. 1347–1360, 2018.
+[17]
+Y. Peng, X. He, and J. Zhao, “Object-part attention model for
+ﬁne-grained image classiﬁcation,” IEEE Transactions on Image
+Processing, vol. 27, no. 3, p. 1487–1500, Mar 2018. [Online].
+Available: http://dx.doi.org/10.1109/TIP.2017.2774041
+[18]
+P. He, W. Huang, T. He, Q. Zhu, Y. Qiao, and X. Li, “Single shot
+text detector with regional attention,” 2017.
+[19]
+O. Oktay, J. Schlemper, L. L. Folgoc, M. Lee, M. Heinrich,
+K. Misawa, K. Mori, S. McDonagh, N. Y. Hammerla, B. Kainz
+et al., “Attention u-net: Learning where to look for the pancreas,”
+arXiv preprint arXiv:1804.03999, 2018.
+[20]
+Q. Guan, Y. Huang, Z. Zhong, Z. Zheng, L. Zheng, and Y. Yang,
+“Diagnose like a radiologist: Attention guided convolutional
+neural network for thorax disease classiﬁcation,” arXiv preprint
+arXiv:1801.09927, 2018.
+[21]
+K. Gregor, I. Danihelka, A. Graves, D. J. Rezende, and D. Wierstra,
+“Draw: A recurrent neural network for image generation,” 2015.
+[22]
+H. Zhang, I. Goodfellow, D. Metaxas, and A. Odena, “Self-
+attention generative adversarial networks,” 2019.
+[23]
+X. Chu, W. Yang, W. Ouyang, C. Ma, A. L. Yuille, and X. Wang,
+“Multi-context attention for human pose estimation,” 2017.
+[24]
+T. Dai, J. Cai, Y. Zhang, S.-T. Xia, and L. Zhang, “Second-order
+attention network for single image super-resolution,” in 2019
+IEEE/CVF Conference on Computer Vision and Pattern Recognition
+(CVPR), 2019, pp. 11 057–11 066.
+[25]
+Y. Zhang, K. Li, K. Li, L. Wang, B. Zhong, and Y. Fu, “Image super-
+resolution using very deep residual channel attention networks,”
+2018.
+[26]
+S. Xie, S. Liu, Z. Chen, and Z. Tu, “Attentional shapecontextnet
+for point cloud recognition,” in Proceedings of the IEEE Conference
+on Computer Vision and Pattern Recognition (CVPR), June 2018.
+[27]
+M.-H. Guo, J.-X. Cai, Z.-N. Liu, T.-J. Mu, R. R. Martin, and
+S.-M. Hu, “Pct: Point cloud transformer,” Computational Visual
+Media, vol. 7, no. 2, p. 187–199, Apr 2021. [Online]. Available:
+http://dx.doi.org/10.1007/s41095-021-0229-5
+[28]
+W. Su, X. Zhu, Y. Cao, B. Li, L. Lu, F. Wei, and J. Dai, “Vl-bert:
+Pre-training of generic visual-linguistic representations,” 2020.
+[29]
+T. Xu, P. Zhang, Q. Huang, H. Zhang, Z. Gan, X. Huang, and X. He,
+“Attngan: Fine-grained text to image generation with attentional
+generative adversarial networks,” 2017.
+[30]
+Y. Wu and K. He, “Group normalization,” 2018.
+[31]
+V. Mnih, N. Heess, A. Graves, and K. Kavukcuoglu, “Recurrent
+models of visual attention,” 2014.
+[32]
+M. Jaderberg, K. Simonyan, A. Zisserman, and K. Kavukcuoglu,
+“Spatial transformer networks,” 2016.
+[33]
+A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N.
+Gomez, L. Kaiser, and I. Polosukhin, “Attention is all you need,”
+2017.
+[34]
+A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai,
+T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly,
+J. Uszkoreit, and N. Houlsby, “An image is worth 16x16 words:
+Transformers for image recognition at scale,” ICLR, 2021.
+[35]
+K. Xu, J. Ba, R. Kiros, K. Cho, A. Courville, R. Salakhudinov,
+R. Zemel, and Y. Bengio, “Show, attend and tell: Neural image
+caption generation with visual attention,” in International confer-
+ence on machine learning.
+PMLR, 2015, pp. 2048–2057.
+[36]
+X. Zhu, H. Hu, S. Lin, and J. Dai, “Deformable convnets v2:
+More deformable, better results,” in Proceedings of the IEEE/CVF
+Conference on Computer Vision and Pattern Recognition (CVPR), June
+2019.
+[37]
+Q. Wang, B. Wu, P. Zhu, P. Li, W. Zuo, and Q. Hu, “Eca-
+net: Efﬁcient channel attention for deep convolutional neural
+networks,” in Proceedings of the IEEE/CVF Conference on Computer
+Vision and Pattern Recognition (CVPR), June 2020.
+[38]
+J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, “Bert: Pre-
+training of deep bidirectional transformers for language under-
+standing,” 2019.
+[39]
+Z. Yang, Z. Dai, Y. Yang, J. Carbonell, R. Salakhutdinov, and Q. V.
+Le, “Xlnet: Generalized autoregressive pretraining for language
+understanding,” 2020.
+[40]
+X. Li, Z. Zhong, J. Wu, Y. Yang, Z. Lin, and H. Liu, “Expectation-
+maximization attention networks for semantic segmentation,” in
+International Conference on Computer Vision, 2019.
+[41]
+Z. Huang, X. Wang, Y. Wei, L. Huang, H. Shi, W. Liu, and T. S.
+Huang, “Ccnet: Criss-cross attention for semantic segmentation,”
+2020.
+[42]
+Z. Geng, M.-H. Guo, H. Chen, X. Li, K. Wei, and Z. Lin, “Is
+attention better than matrix decomposition?” in International
+Conference on Learning Representations, 2021.
+[43]
+P. Ramachandran, N. Parmar, A. Vaswani, I. Bello, A. Levskaya,
+and J. Shlens, “Stand-alone self-attention in vision models,” 2019.
+[44]
+L. Yuan, Y. Chen, T. Wang, W. Yu, Y. Shi, F. E. Tay, J. Feng, and
+S. Yan, “Tokens-to-token vit: Training vision transformers from
+scratch on imagenet,” arXiv preprint arXiv:2101.11986, 2021.
+[45]
+W. Wang, E. Xie, X. Li, D.-P. Fan, K. Song, D. Liang, T. Lu, P. Luo,
+and L. Shao, “Pyramid vision transformer: A versatile backbone
+for dense prediction without convolutions,” 2021.
+[46]
+Z. Liu, Y. Lin, Y. Cao, H. Hu, Y. Wei, Z. Zhang, S. Lin, and B. Guo,
+“Swin transformer: Hierarchical vision transformer using shifted
+windows,” 2021.
+[47]
+H. Wu, B. Xiao, N. Codella, M. Liu, X. Dai, L. Yuan, and
+L. Zhang, “Cvt: Introducing convolutions to vision transformers,”
+in International Conference on Computer Vision (ICCV), Oct. 2021.
+[48]
+L. Yuan, Q. Hou, Z. Jiang, J. Feng, and S. Yan, “Volo: Vision
+outlooker for visual recognition,” 2021.
+[49]
+Z. Dai, H. Liu, Q. V. Le, and M. Tan, “Coatnet: Marrying
+convolution and attention for all data sizes,” 2021.
+[50]
+L. Chen, H. Zhang, J. Xiao, L. Nie, J. Shao, W. Liu, and
+T.
+Chua,
+“SCA-CNN:
+spatial
+and
+channel-wise
+attention
+in convolutional networks for image captioning,” in 2017
+IEEE Conference on Computer Vision and Pattern Recognition,
+CVPR 2017, Honolulu, HI, USA, July 21-26, 2017.
+IEEE
+Computer Society, 2017, pp. 6298–6306. [Online]. Available:
+https://doi.org/10.1109/CVPR.2017.667
+[51]
+V. Nair and G. E. Hinton, “Rectiﬁed Linear Units Improve
+Restricted Boltzmann Machines,” in Proceedings of the 27th In-
+ternational Conference on Machine Learning.
+Omnipress, 2010, pp.
+807–814.
+[52]
+S. Ioffe and C. Szegedy, “Batch normalization: Accelerating deep
+network training by reducing internal covariate shift,” 2015.
+[53]
+H. Zhang, K. J. Dana, J. Shi, Z. Zhang, X. Wang, A. Tyagi,
+and A. Agrawal, “Context encoding for semantic segmentation,”
+in
+2018
+IEEE
+Conference
+on
+Computer
+Vision
+and
+Pattern
+Recognition, CVPR 2018, Salt Lake City, UT, USA, June 18-22, 2018.
+IEEE
+Computer
+Society,
+2018,
+pp.
+7151–7160.
+[Online].
+Available:
+http://openaccess.thecvf.com/content_cvpr_2018/
+html/Zhang_Context_Encoding_for_CVPR_2018_paper.html
+[54]
+G. Zilin, X. Jiangtao, W. Qilong, and L. Peihua, “Global second-
+order pooling convolutional networks,” in The IEEE Conference on
+Computer Vision and Pattern Recognition (CVPR), 2019.
+[55]
+H. Lee, H.-E. Kim, and H. Nam, “Srm : A style-based recalibration
+module for convolutional neural networks,” 2019.
+[56]
+Z. Yang, L. Zhu, Y. Wu, and Y. Yang, “Gated channel transfor-
+mation for visual recognition,” in Proceedings of the IEEE/CVF
+Conference on Computer Vision and Pattern Recognition, 2020, pp.
+11 794–11 803.
+[57]
+Z. Qin, P. Zhang, F. Wu, and X. Li, “Fcanet: Frequency channel
+attention networks,” 2021.
+[58]
+A. Diba, M. Fayyaz, V. Sharma, M. M. Arzani, R. Yousefzadeh,
+J. Gall, and L. V. Gool, “Spatio-temporal channel correlation
+networks for action classiﬁcation,” 2019.
+[59]
+Z. Chen, Y. Li, S. Bengio, and S. Si, “You look twice: Gaternet for
+dynamic ﬁlter selection in cnns,” 2019.
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+25
+[60]
+H. Shi, G. Lin, H. Wang, T.-Y. Hung, and Z. Wang, “Spsequencenet:
+Semantic segmentation network on 4d point clouds,” in Proceed-
+ings of the IEEE/CVF Conference on Computer Vision and Pattern
+Recognition, 2020, pp. 4574–4583.
+[61]
+J. Hu, L. Shen, S. Albanie, G. Sun, and A. Vedaldi, “Gather-excite:
+Exploiting feature context in convolutional neural networks,”
+2019.
+[62]
+X. Yan, C. Zheng, Z. Li, S. Wang, and S. Cui, “Pointasnl: Robust
+point clouds processing using nonlocal neural networks with
+adaptive sampling,” in Proceedings of the IEEE/CVF Conference on
+Computer Vision and Pattern Recognition, 2020, pp. 5589–5598.
+[63]
+H. Hu, J. Gu, Z. Zhang, J. Dai, and Y. Wei, “Relation networks for
+object detection,” 2018.
+[64]
+H. Zhang, H. Zhang, C. Wang, and J. Xie, “Co-occurrent features in
+semantic segmentation,” in Proceedings of the IEEE/CVF Conference
+on Computer Vision and Pattern Recognition (CVPR), June 2019.
+[65]
+I. Bello, B. Zoph, A. Vaswani, J. Shlens, and Q. V. Le, “At-
+tention augmented convolutional networks,” in Proceedings of
+the IEEE/CVF International Conference on Computer Vision (ICCV),
+October 2019.
+[66]
+X. Zhu, D. Cheng, Z. Zhang, S. Lin, and J. Dai, “An empirical
+study of spatial attention mechanisms in deep networks,” 2019.
+[67]
+X. Li, Y. Yang, Q. Zhao, T. Shen, Z. Lin, and H. Liu, “Spatial
+pyramid based graph reasoning for semantic segmentation,” in
+Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition (CVPR), June 2020.
+[68]
+Z. Zhu, M. Xu, S. Bai, T. Huang, and X. Bai, “Asymmetric
+non-local neural networks for semantic segmentation,” in
+International Conference on Computer Vision, 2019. [Online].
+Available: http://arxiv.org/abs/1908.07678
+[69]
+Y. Cao, J. Xu, S. Lin, F. Wei, and H. Hu, “Gcnet: Non-local networks
+meet squeeze-excitation networks and beyond,” arXiv preprint
+arXiv:1904.11492, 2019.
+[70]
+Y. Chen, Y. Kalantidis, J. Li, S. Yan, and J. Feng, “a2-nets: Double
+attention networks,” 2018.
+[71]
+Y. Chen, M. Rohrbach, Z. Yan, S. Yan, J. Feng, and Y. Kalantidis,
+“Graph-based global reasoning networks,” 2018.
+[72]
+S. Zhang, S. Yan, and X. He, “Latentgnn: Learning efﬁcient non-
+local relations for visual recognition,” 2019.
+[73]
+Y. Yuan, X. Chen, X. Chen, and J. Wang, “Segmentation trans-
+former: Object-contextual representations for semantic segmenta-
+tion,” 2021.
+[74]
+M. Yin, Z. Yao, Y. Cao, X. Li, Z. Zhang, S. Lin, and H. Hu,
+“Disentangled non-local neural networks,” 2020.
+[75]
+M.-H. Guo, Z.-N. Liu, T.-J. Mu, and S.-M. Hu, “Beyond self-
+attention: External attention using two linear layers for visual
+tasks,” 2021.
+[76]
+H. Hu, Z. Zhang, Z. Xie, and S. Lin, “Local relation networks for
+image recognition,” 2019.
+[77]
+H. Zhao, J. Jia, and V. Koltun, “Exploring self-attention for image
+recognition,” in Proceedings of the IEEE/CVF Conference on Computer
+Vision and Pattern Recognition (CVPR), June 2020.
+[78]
+M. Chen, A. Radford, R. Child, J. Wu, H. Jun, D. Luan, and
+I. Sutskever, “Generative pretraining from pixels,” in Proceedings
+of the 37th International Conference on Machine Learning, ser.
+Proceedings of Machine Learning Research, H. D. III and A. Singh,
+Eds., vol. 119.
+PMLR, 13–18 Jul 2020, pp. 1691–1703. [Online].
+Available: https://proceedings.mlr.press/v119/chen20s.html
+[79]
+H. Chen, Y. Wang, T. Guo, C. Xu, Y. Deng, Z. Liu, S. Ma, C. Xu,
+C. Xu, and W. Gao, “Pre-trained image processing transformer,”
+2021.
+[80]
+H. Zhao, L. Jiang, J. Jia, P. Torr, and V. Koltun, “Point transformer,”
+2020.
+[81]
+S. Zheng, J. Lu, H. Zhao, X. Zhu, Z. Luo, Y. Wang, Y. Fu, J. Feng,
+T. Xiang, P. H. Torr, and L. Zhang, “Rethinking semantic segmenta-
+tion from a sequence-to-sequence perspective with transformers,”
+in CVPR, 2021.
+[82]
+K. Han, A. Xiao, E. Wu, J. Guo, C. Xu, and Y. Wang, “Transformer
+in transformer,” 2021.
+[83]
+S. Liu, L. Zhang, X. Yang, H. Su, and J. Zhu, “Query2label: A
+simple transformer way to multi-label classiﬁcation,” 2021.
+[84]
+X. Chen, S. Xie, and K. He, “An empirical study of training self-
+supervised vision transformers,” 2021.
+[85]
+H. Bao, L. Dong, and F. Wei, “Beit: Bert pre-training of image
+transformers,” 2021.
+[86]
+E. Xie, W. Wang, Z. Yu, A. Anandkumar, J. M. Alvarez, and P. Luo,
+“Segformer: Simple and efﬁcient design for semantic segmentation
+with transformers,” 2021.
+[87]
+H. Zhao, Y. Zhang, S. Liu, J. Shi, C. C. Loy, D. Lin, and J. Jia,
+“Psanet: Point-wise spatial attention network for scene parsing,”
+in Proceedings of the European Conference on Computer Vision (ECCV),
+September 2018.
+[88]
+J. Ba, V. Mnih, and K. Kavukcuoglu, “Multiple object recognition
+with visual attention,” 2015.
+[89]
+S. Sharma, R. Kiros, and R. Salakhutdinov, “Action recognition
+using visual attention,” 2016.
+[90]
+R. Girdhar and D. Ramanan, “Attentional pooling for action
+recognition,” 2017.
+[91]
+Z. Li, E. Gavves, M. Jain, and C. G. M. Snoek, “Videolstm
+convolves, attends and ﬂows for action recognition,” 2016.
+[92]
+K. Yue, M. Sun, Y. Yuan, F. Zhou, E. Ding, and F. Xu, “Compact
+generalized non-local network,” 2018.
+[93]
+X. Liu, Z. Han, X. Wen, Y.-S. Liu, and M. Zwicker, “L2g auto-
+encoder: Understanding point clouds by local-to-global recon-
+struction with hierarchical self-attention,” in Proceedings of the 27th
+ACM International Conference on Multimedia, 2019, pp. 989–997.
+[94]
+A. Paigwar, O. Erkent, C. Wolf, and C. Laugier, “Attentional
+pointnet for 3d-object detection in point clouds,” in Proceedings of
+the IEEE/CVF Conference on Computer Vision and Pattern Recognition
+Workshops, 2019, pp. 0–0.
+[95]
+X. Wen, Z. Han, G. Youk, and Y.-S. Liu, “Cf-sis: Semantic-instance
+segmentation of 3d point clouds by context fusion with self-
+attention,” in Proceedings of the 28th ACM International Conference
+on Multimedia, 2020, pp. 1661–1669.
+[96]
+J. Yang, Q. Zhang, B. Ni, L. Li, J. Liu, M. Zhou, and Q. Tian,
+“Modeling point clouds with self-attention and gumbel subset
+sampling,” in Proceedings of the IEEE/CVF Conference on Computer
+Vision and Pattern Recognition, 2019, pp. 3323–3332.
+[97]
+J. Xu, R. Zhao, F. Zhu, H. Wang, and W. Ouyang, “Attention-aware
+compositional network for person re-identiﬁcation,” in Proceedings
+of the IEEE conference on computer vision and pattern recognition, 2018,
+pp. 2119–2128.
+[98]
+H. Liu, J. Feng, M. Qi, J. Jiang, and S. Yan, “End-to-end com-
+parative attention networks for person re-identiﬁcation,” IEEE
+Transactions on Image Processing, vol. 26, no. 7, pp. 3492–3506, 2017.
+[99]
+Z. Zheng, L. Zheng, and Y. Yang, “Pedestrian alignment network
+for large-scale person re-identiﬁcation,” IEEE Transactions on
+Circuits and Systems for Video Technology, vol. 29, no. 10, pp. 3037–
+3045, 2018.
+[100] K. Li, Z. Wu, K.-C. Peng, J. Ernst, and Y. Fu, “Tell me where to
+look: Guided attention inference network,” in Proceedings of the
+IEEE Conference on Computer Vision and Pattern Recognition, 2018,
+pp. 9215–9223.
+[101] Z. Zhang, C. Lan, W. Zeng, X. Jin, and Z. Chen, “Relation-aware
+global attention for person re-identiﬁcation,” in Proceedings of the
+ieee/cvf conference on computer vision and pattern recognition, 2020,
+pp. 3186–3195.
+[102] B. N. Xia, Y. Gong, Y. Zhang, and C. Poellabauer, “Second-order
+non-local attention networks for person re-identiﬁcation,” in
+Proceedings of the IEEE/CVF International Conference on Computer
+Vision, 2019, pp. 3760–3769.
+[103] B. Zhao, X. Wu, J. Feng, Q. Peng, and S. Yan, “Diversiﬁed visual
+attention networks for ﬁne-grained object classiﬁcation,” IEEE
+Transactions on Multimedia, vol. 19, no. 6, pp. 1245–1256, 2017.
+[104] H. Zheng, J. Fu, T. Mei, and J. Luo, “Learning multi-attention
+convolutional neural network for ﬁne-grained image recognition,”
+in Proceedings of the IEEE international conference on computer vision,
+2017, pp. 5209–5217.
+[105] J. Fu, H. Zheng, and T. Mei, “Look closer to see better: Recurrent
+attention convolutional neural network for ﬁne-grained image
+recognition,” in Proceedings of the IEEE conference on computer vision
+and pattern recognition, 2017, pp. 4438–4446.
+[106] Anonymous, “DAB-DETR: Dynamic anchor boxes are better
+queries for DETR,” in Submitted to The Tenth International Conference
+on Learning Representations, 2022, under review. [Online]. Available:
+https://openreview.net/forum?id=oMI9PjOb9Jl
+[107] G.-Y. Yang, X.-L. Li, R. R. Martin, and S.-M. Hu, “Sampling
+equivariant self-attention networks for object detection in aerial
+images,” 2021.
+[108] H. Zheng, J. Fu, Z.-J. Zha, and J. Luo, “Looking for the devil
+in the details: Learning trilinear attention sampling network for
+ﬁne-grained image recognition,” in Proceedings of the IEEE/CVF
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+26
+Conference on Computer Vision and Pattern Recognition, 2019, pp.
+5012–5021.
+[109] J.
+Lee,
+Y.
+Lee,
+J.
+Kim,
+A.
+R.
+Kosiorek,
+S.
+Choi,
+and
+Y. W. Teh, “Set transformer: A framework for attention-based
+permutation-invariant neural networks,” in Proceedings of the
+36th International Conference on Machine Learning, ICML 2019,
+9-15 June 2019, Long Beach, California, USA, ser. Proceedings of
+Machine Learning Research, K. Chaudhuri and R. Salakhutdinov,
+Eds., vol. 97.
+PMLR, 2019, pp. 3744–3753. [Online]. Available:
+http://proceedings.mlr.press/v97/lee19d.html
+[110] S. Xu, Y. Cheng, K. Gu, Y. Yang, S. Chang, and P. Zhou, “Jointly
+attentive spatial-temporal pooling networks for video-based
+person re-identiﬁcation,” in Proceedings of the IEEE international
+conference on computer vision, 2017, pp. 4733–4742.
+[111] R. Zhang, J. Li, H. Sun, Y. Ge, P. Luo, X. Wang, and L. Lin,
+“Scan: Self-and-collaborative attention network for video person
+re-identiﬁcation,” IEEE Transactions on Image Processing, vol. 28,
+no. 10, pp. 4870–4882, 2019.
+[112] D. Chen, H. Li, T. Xiao, S. Yi, and X. Wang, “Video person re-
+identiﬁcation with competitive snippet-similarity aggregation
+and co-attentive snippet embedding,” in Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition, 2018, pp.
+1169–1178.
+[113] R. K. Srivastava, K. Greff, and J. Schmidhuber, “Training very
+deep networks,” arXiv preprint arXiv:1507.06228, 2015.
+[114] X. Li, W. Wang, X. Hu, and J. Yang, “Selective kernel networks,”
+in Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition, 2019, pp. 510–519.
+[115] H. Zhang, C. Wu, Z. Zhang, Y. Zhu, H. Lin, Z. Zhang, Y. Sun,
+T. He, J. Mueller, R. Manmatha, M. Li, and A. Smola, “Resnest:
+Split-attention networks,” 2020.
+[116] Y. Chen, X. Dai, M. Liu, D. Chen, L. Yuan, and Z. Liu, “Dynamic
+convolution: Attention over convolution kernels,” in Proceedings of
+the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+2020, pp. 11 030–11 039.
+[117] J. Park, S. Woo, J.-Y. Lee, and I. S. Kweon, “Bam: Bottleneck
+attention module,” 2018.
+[118] L.
+Yang,
+R.-Y.
+Zhang,
+L.
+Li,
+and
+X.
+Xie,
+“Simam:
+A
+simple, parameter-free attention module for convolutional
+neural
+networks,”
+in
+Proceedings
+of
+the
+38th
+International
+Conference on Machine Learning, ser. Proceedings of Machine
+Learning Research, M. Meila and T. Zhang, Eds., vol. 139.
+PMLR, 18–24 Jul 2021, pp. 11 863–11 874. [Online]. Available:
+http://proceedings.mlr.press/v139/yang21o.html
+[119] F. Wang, M. Jiang, C. Qian, S. Yang, C. Li, H. Zhang, X. Wang,
+and X. Tang, “Residual attention network for image classiﬁcation,”
+in Proceedings of the IEEE conference on computer vision and pattern
+recognition, 2017, pp. 3156–3164.
+[120] J.-J. Liu, Q. Hou, M.-M. Cheng, C. Wang, and J. Feng, “Improving
+convolutional networks with self-calibrated convolutions,” in
+Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition (CVPR), June 2020.
+[121] D. Misra, T. Nalamada, A. U. Arasanipalai, and Q. Hou, “Rotate to
+attend: Convolutional triplet attention module,” in Proceedings of
+the IEEE/CVF Winter Conference on Applications of Computer Vision,
+2021, pp. 3139–3148.
+[122] D. Linsley, D. Shiebler, S. Eberhardt, and T. Serre, “Learning
+what and where to attend,” in 7th International Conference on
+Learning Representations, ICLR 2019, New Orleans, LA, USA,
+May 6-9, 2019.
+OpenReview.net, 2019. [Online]. Available:
+https://openreview.net/forum?id=BJgLg3R9KQ
+[123] A. G. Roy, N. Navab, and C. Wachinger, “Recalibrating fully
+convolutional networks with spatial and channel “squeeze and
+excitation” blocks,” IEEE transactions on medical imaging, vol. 38,
+no. 2, pp. 540–549, 2018.
+[124] Q. Hou, L. Zhang, M.-M. Cheng, and J. Feng, “Strip Pooling:
+Rethinking spatial pooling for scene parsing,” in CVPR, 2020.
+[125] H. You, Y. Feng, R. Ji, and Y. Gao, “Pvnet: A joint convolutional
+network of point cloud and multi-view for 3d shape recognition,”
+in Proceedings of the 26th ACM international conference on Multimedia,
+2018, pp. 1310–1318.
+[126] Q. Xie, Y.-K. Lai, J. Wu, Z. Wang, Y. Zhang, K. Xu, and J. Wang,
+“Mlcvnet: Multi-level context votenet for 3d object detection,” in
+Proceedings of the IEEE/CVF conference on computer vision and pattern
+recognition, 2020, pp. 10 447–10 456.
+[127] C. Wang, Q. Zhang, C. Huang, W. Liu, and X. Wang, “Mancs:
+A multi-task attentional network with curriculum sampling for
+person re-identiﬁcation,” in Proceedings of the European Conference
+on Computer Vision (ECCV), 2018, pp. 365–381.
+[128] T. Chen, S. Ding, J. Xie, Y. Yuan, W. Chen, Y. Yang, Z. Ren, and
+Z. Wang, “Abd-net: Attentive but diverse person re-identiﬁcation,”
+in Proceedings of the IEEE/CVF International Conference on Computer
+Vision, 2019, pp. 8351–8361.
+[129] Q. Hou, D. Zhou, and J. Feng, “Coordinate attention for efﬁcient
+mobile network design,” in Proceedings of the IEEE/CVF Conference
+on Computer Vision and Pattern Recognition, 2021, pp. 13 713–13 722.
+[130] S. Song, C. Lan, J. Xing, W. Zeng, and J. Liu, “An end-to-end
+spatio-temporal attention model for human action recognition
+from skeleton data,” in AAAI Conference on Artiﬁcial Intelligence,
+2017, pp. 4263–4270.
+[131] Y.
+Fu,
+X.
+Wang,
+Y.
+Wei,
+and
+T.
+Huang,
+“Sta:
+Spatial-
+temporal
+attention
+for
+large-scale
+video-based
+person
+re-
+identiﬁcation,” Proceedings of the AAAI Conference on Artiﬁcial
+Intelligence, vol. 33, p. 8287–8294, Jul 2019. [Online]. Available:
+http://dx.doi.org/10.1609/aaai.v33i01.33018287
+[132] L. Gao, X. Li, J. Song, and H. T. Shen, “Hierarchical lstms with
+adaptive attention for visual captioning,” IEEE transactions on
+pattern analysis and machine intelligence, vol. 42, no. 5, pp. 1112–
+1131, 2019.
+[133] C. Yan, Y. Tu, X. Wang, Y. Zhang, X. Hao, Y. Zhang, and Q. Dai,
+“Stat: Spatial-temporal attention mechanism for video captioning,”
+IEEE Transactions on Multimedia, vol. 22, no. 1, pp. 229–241, 2020.
+[134] L. Meng, B. Zhao, B. Chang, G. Huang, W. Sun, F. Tung, and
+L. Sigal, “Interpretable spatio-temporal attention for video action
+recognition,” 2019.
+[135] B. He, X. Yang, Z. Wu, H. Chen, S.-N. Lim, and A. Shrivastava,
+“Gta: Global temporal attention for video action understanding,”
+2021.
+[136] S. Li, S. Bak, P. Carr, and X. Wang, “Diversity regularized
+spatiotemporal attention for video-based person re-identiﬁcation,”
+in Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition, 2018, pp. 369–378.
+[137] Z. Zhang, C. Lan, W. Zeng, and Z. Chen, “Multi-granularity
+reference-aided attentive feature aggregation for video-based
+person re-identiﬁcation,” in Proceedings of the IEEE/CVF Conference
+on Computer Vision and Pattern Recognition, 2020, pp. 10 407–10 416.
+[138] M. Shim, H.-I. Ho, J. Kim, and D. Wee, “Read: Reciprocal attention
+discriminator for image-to-video re-identiﬁcation,” in European
+Conference on Computer Vision.
+Springer, 2020, pp. 335–350.
+[139] R. Liu, H. Deng, Y. Huang, X. Shi, L. Lu, W. Sun, X. Wang, J. Dai,
+and H. Li, “Decoupled spatial-temporal transformer for video
+inpainting,” 2021.
+[140] S. Chaudhari, V. Mithal, G. Polatkan, and R. Ramanath, “An
+attentive survey of attention models,” 2021.
+[141] Y. Xu, H. Wei, M. Lin, Y. Deng, K. Sheng, M. Zhang, F. Tang,
+W. Dong, F. Huang, and C. Xu, “Transformers in computational
+visual media: A survey,” Computational Visual Media, vol. 8, no. 1,
+pp. 33–62, 2022.
+[142] K. Han, Y. Wang, H. Chen, X. Chen, J. Guo, Z. Liu, Y. Tang, A. Xiao,
+C. Xu, Y. Xu, Z. Yang, Y. Zhang, and D. Tao, “A survey on visual
+transformer,” 2021.
+[143] S. Khan, M. Naseer, M. Hayat, S. W. Zamir, F. S. Khan, and M. Shah,
+“Transformers in vision: A survey,” 2021.
+[144] F. Wang and D. M. J. Tax, “Survey on the attention based rnn
+model and its applications in computer vision,” 2016.
+[145] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for
+image recognition,” 2015.
+[146] P. Fang, J. Zhou, S. K. Roy, L. Petersson, and M. Harandi, “Bilinear
+attention networks for person retrieval,” in Proceedings of the
+IEEE/CVF International Conference on Computer Vision, 2019, pp.
+8030–8039.
+[147] S. Hochreiter and J. Schmidhuber, “Long short-term memory,”
+Neural Computation, vol. 9, no. 8, pp. 1735–1780, 1997.
+[148] R. S. Sutton, D. A. McAllester, S. P. Singh, and Y. Mansour,
+“Policy gradient methods for reinforcement learning with function
+approximation,” in Advances in neural information processing systems,
+2000, pp. 1057–1063.
+[149] D. Bahdanau, K. Cho, and Y. Bengio, “Neural machine translation
+by jointly learning to align and translate,” 2016.
+[150] Z. Lin, M. Feng, C. N. dos Santos, M. Yu, B. Xiang, B. Zhou, and
+Y. Bengio, “A structured self-attentive sentence embedding,” 2017.
+[151] Z. Dai, Z. Yang, Y. Yang, J. Carbonell, Q. V. Le, and R. Salakhutdi-
+nov, “Transformer-xl: Attentive language models beyond a ﬁxed-
+length context,” 2019.
+JOURNAL OF LATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2015
+27
+[152] K. Choromanski, V. Likhosherstov, D. Dohan, X. Song, A. Gane,
+T. Sarlos, P. Hawkins, J. Davis, A. Mohiuddin, L. Kaiser, D. Be-
+langer, L. Colwell, and A. Weller, “Rethinking attention with
+performers,” 2021.
+[153] X. Zhu, W. Su, L. Lu, B. Li, X. Wang, and J. Dai, “Deformable detr:
+Deformable transformers for end-to-end object detection,” 2021.
+[154] W. Liu, A. Rabinovich, and A. C. Berg, “Parsenet: Looking wider
+to see better,” 2015.
+[155] C. Peng, X. Zhang, G. Yu, G. Luo, and J. Sun, “Large kernel
+matters – improve semantic segmentation by global convolutional
+network,” in Proceedings of the IEEE Conference on Computer Vision
+and Pattern Recognition (CVPR), July 2017.
+[156] H. Zhao, J. Shi, X. Qi, X. Wang, and J. Jia, “Pyramid scene parsing
+network,” in 2017 IEEE Conference on Computer Vision and Pattern
+Recognition, CVPR 2017, Honolulu, HI, USA, July 21-26, 2017.
+IEEE Computer Society, 2017, pp. 6230–6239. [Online]. Available:
+https://doi.org/10.1109/CVPR.2017.660
+[157] K. He, X. Zhang, S. Ren, and J. Sun, “Spatial pyramid pooling
+in deep convolutional networks for visual recognition,” Lecture
+Notes in Computer Science, p. 346–361, 2014. [Online]. Available:
+http://dx.doi.org/10.1007/978-3-319-10578-9_23
+[158] I. Tolstikhin, N. Houlsby, A. Kolesnikov, L. Beyer, X. Zhai, T. Un-
+terthiner, J. Yung, A. Steiner, D. Keysers, J. Uszkoreit, M. Lucic, and
+A. Dosovitskiy, “Mlp-mixer: An all-mlp architecture for vision,”
+2021.
+[159] H. Touvron, P. Bojanowski, M. Caron, M. Cord, A. El-Nouby,
+E. Grave, G. Izacard, A. Joulin, G. Synnaeve, J. Verbeek, and
+H. Jégou, “Resmlp: Feedforward networks for image classiﬁcation
+with data-efﬁcient training,” 2021.
+[160] P. Shaw, J. Uszkoreit, and A. Vaswani, “Self-attention with relative
+position representations,” 2018.
+[161] T. B. Brown, B. Mann, N. Ryder, M. Subbiah, J. Kaplan, P. Dhariwal,
+A. Neelakantan, P. Shyam, G. Sastry, A. Askell, S. Agarwal,
+A. Herbert-Voss, G. Krueger, T. Henighan, R. Child, A. Ramesh,
+D. M. Ziegler, J. Wu, C. Winter, C. Hesse, M. Chen, E. Sigler,
+M. Litwin, S. Gray, B. Chess, J. Clark, C. Berner, S. McCandlish,
+A. Radford, I. Sutskever, and D. Amodei, “Language models are
+few-shot learners,” 2020.
+[162] J. L. Ba, J. R. Kiros, and G. E. Hinton, “Layer normalization,” 2016.
+[163] D. Hendrycks and K. Gimpel, “Gaussian error linear units (gelus),”
+2020.
+[164] C. Sun, A. Shrivastava, S. Singh, and A. Gupta, “Revisiting
+unreasonable effectiveness of data in deep learning era,” 2017.
+[165] J. Deng, W. Dong, R. Socher, L. Li, K. Li, and F. Li, “Imagenet:
+A large-scale hierarchical image database,” in CVPR, 2009, pp.
+248–255.
+[166] D. Zhou, B. Kang, X. Jin, L. Yang, X. Lian, Z. Jiang, Q. Hou, and
+J. Feng, “Deepvit: Towards deeper vision transformer,” 2021.
+[167] H. Touvron, M. Cord, A. Sablayrolles, G. Synnaeve, and H. Jégou,
+“Going deeper with image transformers,” 2021.
+[168] R. Liu, H. Deng, Y. Huang, X. Shi, L. Lu, W. Sun, X. Wang,
+J. Dai, and H. Li, “Fuseformer: Fusing ﬁne-grained information in
+transformers for video inpainting,” 2021.
+[169] K. He, X. Chen, S. Xie, Y. Li, P. Dollár, and R. Girshick, “Masked
+autoencoders are scalable vision learners,” 2021.
+[170] M.-H. Guo, Z.-N. Liu, T.-J. Mu, D. Liang, R. R. Martin, and S.-M.
+Hu, “Can attention enable mlps to catch up with cnns?” 2021.
+[171] J. Li, J. Wang, Q. Tian, W. Gao, and S. Zhang, “Global-local
+temporal representations for video person re-identiﬁcation,” in
+Proceedings of the IEEE/CVF International Conference on Computer
+Vision, 2019, pp. 3958–3967.
+[172] Z. Liu, L. Wang, W. Wu, C. Qian, and T. Lu, “Tam: Temporal adap-
+tive module for video recognition,” arXiv preprint arXiv:2005.06803,
+2020.
+[173] B. Yang, G. Bender, Q. V. Le, and J. Ngiam, “Condconv: Condi-
+tionally parameterized convolutions for efﬁcient inference,” 2020.
+[174] L. Spillmann, B. Dresp-Langley, and C.-H. Tseng, “Beyond the
+classical receptive ﬁeld: the effect of contextual stimuli,” Journal of
+Vision, vol. 15, no. 9, pp. 7–7, 2015.
+[175] S. Xie, R. Girshick, P. Dollár, Z. Tu, and K. He, “Aggregated
+residual transformations for deep neural networks,” 2017.
+[176] W. BS, D. NT, S. SG, T. C, and L. P, “Early and late mechanisms of
+surround suppression in striate cortex of macaque,” 2005.
+[177] J. Yang, W.-S. Zheng, Q. Yang, Y.-C. Chen, and Q. Tian, “Spatial-
+temporal graph convolutional network for video-based person
+re-identiﬁcation,” in Proceedings of the IEEE/CVF Conference on
+Computer Vision and Pattern Recognition, 2020, pp. 3289–3299.
+[178] C. Szegedy, W. Liu, Y. Jia, P. Sermanet, S. Reed, D. Anguelov,
+D. Erhan, V. Vanhoucke, and A. Rabinovich, “Going deeper with
+convolutions,” 2014.
+[179] T. B. Brown, B. Mann, N. Ryder, M. Subbiah, J. Kaplan, P. Dhariwal,
+A. Neelakantan, P. Shyam, G. Sastry, A. Askell, S. Agarwal,
+A. Herbert-Voss, G. Krueger, T. Henighan, R. Child, A. Ramesh,
+D. M. Ziegler, J. Wu, C. Winter, C. Hesse, M. Chen, E. Sigler,
+M. Litwin, S. Gray, B. Chess, J. Clark, C. Berner, S. McCandlish,
+A. Radford, I. Sutskever, and D. Amodei, “Language models are
+few-shot learners,” 2020.
+[180] M. Caron, H. Touvron, I. Misra, H. Jégou, J. Mairal, P. Bojanowski,
+and A. Joulin, “Emerging properties in self-supervised vision
+transformers,” 2021.
+[181] N. Qian, “On the momentum term in gradient descent learning
+algorithms.” Neural Networks, vol. 12, no. 1, pp. 145–151, 1999.
+[Online]. Available: http://dblp.uni-trier.de/db/journals/nn/
+nn12.html#Qian99
+[182] D. P. Kingma and J. Ba, “Adam: A method for stochastic optimiza-
+tion,” 2017.
+[183] I. Loshchilov and F. Hutter, “Decoupled weight decay regulariza-
+tion,” 2019.
+[184] X. Chen, C.-J. Hsieh, and B. Gong, “When vision transformers
+outperform resnets without pretraining or strong data augmenta-
+tions,” 2021.
+[185] P. Foret, A. Kleiner, H. Mobahi, and B. Neyshabur, “Sharpness-
+aware minimization for efﬁciently improving generalization,”
+2021.
