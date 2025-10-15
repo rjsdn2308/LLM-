@@ -1,0 +1,22 @@
+[
+    {
+        "no": 1,
+        "eng": "Which of the following descriptions of the image is incorrect?\n- (1) Motorcycles are lined up in front of the building.\n- (2) The building has a vintage design.\n- (3) The road is crowded with vehicles.\n- (4) Trees are located in front of the building.",
+        "img": "bike.jpg"
+    },
+    {
+        "no": 2,
+        "eng": "Which of the following descriptions of the image is incorrect?\n- (1) The chefs are wearing white uniforms.\n- (2) Food preparation is actively taking place.\n- (3) The chefs are not wearing hats.\n- (4) There is flour scattered on the worktable.",
+        "img": "dumpling.jpg"
+    },
+    {
+        "no": 3,
+        "eng": "Which of the following descriptions of the image is incorrect?\n- (1) The photo shows the '2025 Medical AI Innovation' event.\n- (2) The presenter is wearing a black suit and using a microphone.\n- (3) The screen displays information about the 'Healthcare EcoSystem.'\n- (4) All audience members are using laptops.",
+        "img": "khf2025.jpg"
+    },
+    {
+        "no": 4,
+        "eng": "Which of the following descriptions of the image is incorrect?\n- (1) A unique stand with meat displayed is visible.\n- (2) People appear to be preparing food.\n- (3) There are beverages in dispensers in the background.\n- (4) The image was taken outdoors.",
+        "img": "meat.jpg"
+    }
+]
